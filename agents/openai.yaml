@@ -1,0 +1,6 @@
+interface:
+  display_name: "Dumb n Honest"
+  short_description: "Audit coding-agent self-corrections locally"
+  default_prompt: "Use $dumb-n-honest to audit my local Claude Code and Codex self-corrections."
+policy:
+  allow_implicit_invocation: false

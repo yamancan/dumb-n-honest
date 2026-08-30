@@ -1,0 +1,46 @@
+{"type":"user","message":{"role":"user","content":"Synthetic prompt 01"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"I got that wrong."}]}}
+{"type":"user","message":{"role":"user","content":"Synthetic prompt 02"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"My mistake. The value is nullable."}]}}
+{"type":"user","message":{"role":"user","content":"Synthetic prompt 03"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"I misread the schema."}]}}
+{"type":"user","message":{"role":"user","content":"Synthetic prompt 04"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"I overlooked the null case."}]}}
+{"type":"user","message":{"role":"user","content":"Synthetic prompt 05"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"I incorrectly assumed the field was required."}]}}
+{"type":"user","message":{"role":"user","content":"Synthetic prompt 06"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"I need to correct my previous answer."}]}}
+{"type":"user","message":{"role":"user","content":"Sentetik istem 07"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Ben hatalıydım."}]}}
+{"type":"user","message":{"role":"user","content":"Sentetik istem 08"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Bir hata yaptım."}]}}
+{"type":"user","message":{"role":"user","content":"Sentetik istem 09"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Bu benim hatamdı."}]}}
+{"type":"user","message":{"role":"user","content":"Sentetik istem 10"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Dosya yolunu yanlış okudum."}]}}
+{"type":"user","message":{"role":"user","content":"Sentetik istem 11"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Bunu gözden kaçırdım."}]}}
+{"type":"user","message":{"role":"user","content":"Sentetik istem 12"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"İki modeli birbirine karıştırdım."}]}}
+{"type":"user","message":{"role":"user","content":"Sentetik istem 13"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Önceki cevabım yanlıştı."}]}}
+{"type":"user","message":{"role":"user","content":"Sentetik istem 14"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Bunu düzelteyim."}]}}
+{"type":"user","message":{"role":"user","content":"Sentetik istem 15"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Söylediğimi geri alıyorum."}]}}
+{"type":"user","message":{"role":"user","content":"Synthetic prompt 16"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"You are absolutely right."}]}}
+{"type":"user","message":{"role":"user","content":"Synthetic prompt 17"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Great catch."}]}}
+{"type":"user","message":{"role":"user","content":"Synthetic prompt 18"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Thanks for correcting me."}]}}
+{"type":"user","message":{"role":"user","content":"Sentetik istem 19"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Siz haklısınız."}]}}
+{"type":"user","message":{"role":"user","content":"Sentetik istem 20"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Doğru söylüyorsun."}]}}
+{"type":"user","message":{"role":"user","content":"Sentetik istem 21"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"İyi yakaladın."}]}}
+{"type":"user","message":{"role":"user","content":"Sentetik istem 22"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Uyarın yerinde."}]}}
+{"type":"user","message":{"role":"user","content":"Sentetik istem 23"}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Beni düzelttiğin için teşekkür ederim."}]}}

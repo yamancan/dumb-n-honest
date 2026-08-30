@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.DS_Store
+dumb-n-honest-output*/
+dist/
+*.skill

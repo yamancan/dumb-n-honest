@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.1",
+  "languages": ["en", "tr"],
+  "providers": {
+    "claude": {
+      "diagnostics": {"mixed_model_turns": 2},
+      "models": [
+        {
+          "model_id": "claude-opus-5",
+          "answered_human_turns": 2000,
+          "usage_share_pct": 78.43,
+          "owned_error": {"count": 100, "per_100_turns": 5.0, "by_language": {"en": 20, "tr": 80}, "by_pattern": {}},
+          "conceded": {"count": 60, "per_100_turns": 3.0, "by_language": {"en": 10, "tr": 50}, "by_pattern": {}},
+          "effort": {"high": 500, "xhigh": 1500},
+          "date_range": {"first": "2026-01-01", "last": "2026-02-01"},
+          "reasoning": {"observed_tokens": 200000, "tokens_in_covered_answered_turns": 160000, "covered_units": 500, "eligible_units": 2000, "covered_answered_turns": 400, "coverage_pct": 25.0, "answered_turn_coverage_pct": 20.0, "tokens_per_covered_answered_turn": 400.0}
+        },
+        {
+          "model_id": "claude-opus-4-8",
+          "answered_human_turns": 500,
+          "usage_share_pct": 19.61,
+          "owned_error": {"count": 5, "per_100_turns": 1.0, "by_language": {"tr": 5}, "by_pattern": {}},
+          "conceded": {"count": 20, "per_100_turns": 4.0, "by_language": {"tr": 20}, "by_pattern": {}},
+          "effort": {"high": 500},
+          "date_range": {"first": "2026-01-01", "last": "2026-02-01"},
+          "reasoning": {"observed_tokens": 0, "tokens_in_covered_answered_turns": 0, "covered_units": 0, "eligible_units": 500, "covered_answered_turns": 0, "coverage_pct": 0.0, "answered_turn_coverage_pct": 0.0, "tokens_per_covered_answered_turn": null}
+        },
+        {
+          "model_id": "claude-fable-5",
+          "answered_human_turns": 50,
+          "usage_share_pct": 1.96,
+          "owned_error": {"count": 1, "per_100_turns": 2.0, "by_language": {"tr": 1}, "by_pattern": {}},
+          "conceded": {"count": 1, "per_100_turns": 2.0, "by_language": {"tr": 1}, "by_pattern": {}},
+          "effort": {"high": 50},
+          "date_range": {"first": "2026-01-15", "last": "2026-01-20"},
+          "reasoning": {"observed_tokens": 0, "tokens_in_covered_answered_turns": 0, "covered_units": 0, "eligible_units": 50, "covered_answered_turns": 0, "coverage_pct": 0.0, "answered_turn_coverage_pct": 0.0, "tokens_per_covered_answered_turn": null}
+        }
+      ]
+    },
+    "codex": {
+      "diagnostics": {"subagent_sessions_excluded": 1},
+      "models": [
+        {
+          "model_id": "gpt-5.6-sol",
+          "answered_human_turns": 1000,
+          "usage_share_pct": 76.92,
+          "owned_error": {"count": 20, "per_100_turns": 2.0, "by_language": {"en": 15, "tr": 5}, "by_pattern": {}},
+          "conceded": {"count": 10, "per_100_turns": 1.0, "by_language": {"en": 8, "tr": 2}, "by_pattern": {}},
+          "effort": {"ultra": 1000},
+          "date_range": {"first": "2026-01-01", "last": "2026-02-01"},
+          "reasoning": {"observed_tokens": 1000000, "tokens_in_covered_answered_turns": 1000000, "covered_units": 990, "eligible_units": 1000, "covered_answered_turns": 990, "coverage_pct": 99.0, "answered_turn_coverage_pct": 99.0, "tokens_per_covered_answered_turn": 1010.1}
+        },
+        {
+          "model_id": "gpt-5.5",
+          "answered_human_turns": 300,
+          "usage_share_pct": 23.08,
+          "owned_error": {"count": 3, "per_100_turns": 1.0, "by_language": {"en": 3}, "by_pattern": {}},
+          "conceded": {"count": 6, "per_100_turns": 2.0, "by_language": {"en": 6}, "by_pattern": {}},
+          "effort": {"high": 300},
+          "date_range": {"first": "2026-01-01", "last": "2026-02-01"},
+          "reasoning": {"observed_tokens": 150000, "tokens_in_covered_answered_turns": 150000, "covered_units": 300, "eligible_units": 300, "covered_answered_turns": 300, "coverage_pct": 100.0, "answered_turn_coverage_pct": 100.0, "tokens_per_covered_answered_turn": 500.0}
+        }
+      ]
+    }
+  }
+}

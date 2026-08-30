@@ -1,0 +1,149 @@
+{
+  "language": "en",
+  "owned_error": [
+    {
+      "id": "en.owned.i_was_wrong",
+      "regex": "\\bi (?:was|am|'m) (?:completely |totally |plainly )?wrong\\b",
+      "examples": {"match": ["I was wrong."], "non_match": ["I may be wrong."]}
+    },
+    {
+      "id": "en.owned.i_was_incorrect",
+      "regex": "\\bi (?:was|am|'m) (?:completely |plainly )?incorrect\\b",
+      "examples": {"match": ["I was incorrect."], "non_match": ["The value was incorrect."]}
+    },
+    {
+      "id": "en.owned.got_wrong",
+      "regex": "\\bi got (?:that|this|it|[^.!?\\n]{1,50}) wrong\\b",
+      "examples": {"match": ["I got that wrong."], "non_match": ["You got that wrong."]}
+    },
+    {
+      "id": "en.owned.backwards",
+      "regex": "\\bi had (?:that|this|it) backwards\\b",
+      "examples": {"match": ["I had it backwards."], "non_match": ["I had that value yesterday."]}
+    },
+    {
+      "id": "en.owned.mistaken",
+      "regex": "\\bi (?:was|am) mistaken\\b|\\bi stand corrected\\b",
+      "examples": {"match": ["I was mistaken."], "non_match": ["You were mistaken."]}
+    },
+    {
+      "id": "en.owned.mistake",
+      "regex": "\\bi (?:made|have made) (?:a|an) (?:mistake|error)\\b|\\bmy mistake\\b|\\bthat was (?:my|an) (?:mistake|error|fault)\\b",
+      "examples": {"match": ["My mistake."], "non_match": ["A mistake was made."]}
+    },
+    {
+      "id": "en.owned.mis_verbs",
+      "regex": "\\bi (?:misread|misunderstood|misinterpreted|misremembered|miscalculated|misstated|mischaracterized)\\b",
+      "examples": {"match": ["I misread the schema."], "non_match": ["The parser misread the schema."]}
+    },
+    {
+      "id": "en.owned.missed",
+      "regex": "\\bi (?:overlooked|missed|failed to (?:notice|account for|follow))\\b",
+      "examples": {"match": ["I overlooked the null case."], "non_match": ["We missed the deadline."]}
+    },
+    {
+      "id": "en.owned.incorrect_action",
+      "regex": "\\bi (?:incorrectly|wrongly) (?:said|stated|claimed|assumed|calculated|implemented|identified|described|attributed|concluded)\\b",
+      "examples": {"match": ["I incorrectly assumed it was required."], "non_match": ["I correctly assumed it was required."]}
+    },
+    {
+      "id": "en.owned.conflated",
+      "regex": "\\bi (?:conflated|confused|mixed up)\\b",
+      "examples": {"match": ["I conflated the two models."], "non_match": ["They conflated the two models."]}
+    },
+    {
+      "id": "en.owned.previous_wrong",
+      "regex": "\\bmy (?:previous|earlier|prior) (?:answer|claim|statement|response) was (?:wrong|incorrect|inaccurate)\\b",
+      "examples": {"match": ["My previous answer was wrong."], "non_match": ["The previous answer was wrong."]}
+    },
+    {
+      "id": "en.owned.gave_wrong",
+      "regex": "\\bi gave you (?:the |an? )?(?:wrong|incorrect|inaccurate|outdated)\\b",
+      "examples": {"match": ["I gave you the wrong path."], "non_match": ["You gave me the wrong path."]}
+    },
+    {
+      "id": "en.owned.caused_problem",
+      "regex": "\\bi (?:introduced|caused) (?:that|this|the|an?) (?:bug|error|failure|problem)\\b",
+      "examples": {"match": ["I introduced that bug."], "non_match": ["The patch introduced that bug."]}
+    },
+    {
+      "id": "en.owned.fabricated",
+      "regex": "\\bi (?:fabricated|hallucinated|made up)\\b",
+      "examples": {"match": ["I fabricated that citation."], "non_match": ["The citation was fabricated."]}
+    },
+    {
+      "id": "en.owned.correct_previous",
+      "regex": "\\b(?:i need to|let me) correct (?:my |the )?(?:previous |earlier |prior )?(?:answer|claim|statement|response|that|this)\\b",
+      "examples": {"match": ["I need to correct my previous answer."], "non_match": ["Correct my previous answer."]}
+    },
+    {
+      "id": "en.owned.take_back",
+      "regex": "\\bi take that back\\b",
+      "examples": {"match": ["I take that back."], "non_match": ["Take that back."]}
+    },
+    {
+      "id": "en.owned.on_me",
+      "regex": "\\b(?:that|this(?: one)?) (?:was|is|'s) on me\\b",
+      "examples": {"match": ["That was on me."], "non_match": ["That was on the server."]}
+    },
+    {
+      "id": "en.owned.owe_correction",
+      "regex": "\\bi owe you a correction\\b",
+      "examples": {"match": ["I owe you a correction."], "non_match": ["The document needs a correction."]}
+    }
+  ],
+  "conceded": [
+    {
+      "id": "en.conceded.you_are_right",
+      "regex": "\\byou(?:'re| are) (?:(?:absolutely|completely|entirely|totally) )?right\\b",
+      "examples": {"match": ["You are absolutely right."], "non_match": ["You may be right."]}
+    },
+    {
+      "id": "en.conceded.you_are_correct",
+      "regex": "\\byou(?:'re| are) (?:(?:absolutely|completely|entirely|totally) )?correct\\b",
+      "examples": {"match": ["You're absolutely correct."], "non_match": ["Correct the value."]}
+    },
+    {
+      "id": "en.conceded.you_were_right",
+      "regex": "\\byou were (?:(?:absolutely|completely|entirely|totally) )?right\\b",
+      "examples": {"match": ["You were right."], "non_match": ["You may have been right."]}
+    },
+    {
+      "id": "en.conceded.catch",
+      "regex": "\\b(?:good|great|nice) catch\\b|\\bwell spotted\\b",
+      "examples": {"match": ["Great catch."], "non_match": ["Catch the error."]}
+    },
+    {
+      "id": "en.conceded.point",
+      "regex": "\\bfair point\\b|\\bpoint taken\\b",
+      "examples": {"match": ["Point taken."], "non_match": ["The point is fair."]}
+    },
+    {
+      "id": "en.conceded.thanks_correction",
+      "regex": "\\bthank(?:s| you) for (?:catching that|correcting me)\\b",
+      "examples": {"match": ["Thanks for correcting me."], "non_match": ["Thanks for the update."]}
+    },
+    {
+      "id": "en.conceded.thats_right",
+      "regex": "\\bthat's right\\b",
+      "examples": {"match": ["That's right."], "non_match": ["The right value is three."]}
+    }
+  ],
+  "exclude": [
+    {
+      "id": "en.exclude.conditional_wrong",
+      "regex": "\\b(?:if|whether) i (?:was|am|'m) wrong\\b",
+      "examples": {"match": ["If I was wrong, the test would fail."], "non_match": ["I was wrong."]}
+    },
+    {
+      "id": "en.exclude.meta_discussion",
+      "regex": "(?:\\b(?:i was (?:wrong|incorrect)|that was on me|you(?:'re| are) (?:right|correct)|you were right)\\b\\s+(?:is|was|means|matches)\\s+(?:the |an? )?\\b(?:phrase|pattern|regex|regular expression|literal|string|example|fixture|classifier|category)\\b|\\b(?:phrase|pattern|regex|regular expression|literal|string|example|fixture|classifier|category)\\b[^.!?\\n]{0,40}\\b(?:i was (?:wrong|incorrect)|that was on me|you(?:'re| are) (?:right|correct)|you were right)\\b)",
+      "examples": {"match": ["I was wrong is the phrase this classifier counts."], "non_match": ["I was wrong about the regex."]}
+    },
+    {
+      "id": "en.exclude.reported_or_retracted",
+      "regex": "\\b(?:thought|believed|feared) i (?:was|am|'m) wrong\\b|\\bi was wrong\\b[^.!?\\n]{0,80}\\bbut i (?:wasn't|was not|am not)\\b",
+      "examples": {"match": ["I thought I was wrong, but I wasn't."], "non_match": ["Apparently I was wrong."]}
+    }
+  ]
+}

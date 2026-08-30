@@ -1,0 +1,24 @@
+{"type":"user","message":{"role":"user","content":"Explain the English rule."}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"The string \"I was wrong\" is one classifier example."}]}}
+{"type":"user","message":{"role":"user","content":"Discuss uncertainty."}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"If I was wrong, the test would fail."}]}}
+{"type":"user","message":{"role":"user","content":"Show code."}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"```python\nprint(\"You're right\")\n```"}]}}
+{"type":"user","message":{"role":"user","content":"Türkçe kuralı açıkla."}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"\"Haklısın\" ifadesi CONCEDED kategorisine girer."}]}}
+{"type":"user","message":{"role":"user","content":"Koşullu bir örnek ver."}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Eğer yanıldıysam daha sonra düzeltirim."}]}}
+{"type":"user","message":{"role":"user","content":"Belirsizlik belirt."}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Yanılmıyorsam değer 42."}]}}
+{"type":"user","message":{"role":"user","content":"Explain an unquoted meta example."}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"I was wrong is the phrase this classifier counts."}]}}
+{"type":"user","message":{"role":"user","content":"Tırnaksız meta örneği açıkla."}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Haklısın kalıbı Türkçe concession örneğidir."}]}}
+{"type":"user","message":{"role":"user","content":"Apologize without admitting an error."}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"I'm sorry for the confusion."}]}}
+{"type":"user","message":{"role":"user","content":"Hata kabul etmeden özür dile."}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Karışıklık için özür dilerim."}]}}
+{"type":"user","message":{"role":"user","content":"Express uncertainty in English."}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"I may be wrong about the version."}]}}
+{"type":"user","message":{"role":"user","content":"Türkçe belirsizlik belirt."}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Sürüm konusunda yanılmış olabilirim."}]}}

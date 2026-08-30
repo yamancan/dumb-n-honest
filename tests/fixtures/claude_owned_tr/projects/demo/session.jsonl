@@ -1,0 +1,2 @@
+{"type":"user","timestamp":"2026-01-02T12:00:00Z","message":{"role":"user","content":"Dosyayı tekrar kontrol et."}}
+{"type":"assistant","timestamp":"2026-01-02T12:00:01Z","effort":"high","requestId":"synthetic-request-tr-1","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"Haklısın; burada ben yanılmışım. Yanlış dosyayı okudum."}],"usage":{"output_tokens_details":{"thinking_tokens":18}}}}

@@ -1,0 +1,9 @@
+{"type":"user","message":{"role":"user","content":"Check the implementation."}}
+{"type":"assistant","requestId":"synthetic-boundary-1","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"I was wrong."}]}}
+{"type":"assistant","requestId":"synthetic-boundary-1","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"I was wrong. I will fix it."}]}}
+{"type":"user","toolUseResult":{"stdout":"synthetic"},"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"synthetic-tool","content":"synthetic"}]}}
+{"type":"assistant","requestId":"synthetic-boundary-2","message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"The correction is complete."}]}}
+{"type":"user","isSidechain":true,"message":{"role":"user","content":"Synthetic subagent prompt."}}
+{"type":"assistant","isSidechain":true,"message":{"role":"assistant","model":"claude-opus-5","content":[{"type":"text","text":"I was wrong."}]}}
+{"type":"user","message":{"role":"user","content":"<system-reminder>Injected synthetic reminder</system-reminder>"}}
+{"type":"assistant","message":{"role":"assistant","model":"<synthetic>","content":[{"type":"text","text":"I was wrong."}]}}
