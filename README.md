@@ -1,17 +1,30 @@
-# dumb-n-honest
+# Dumb n Honest
 
-A private, bilingual personal observational benchmark for local Claude Code and Codex history.
+A private, local benchmark of how often Claude Code and Codex explicitly acknowledge a correction.
 
-It answers one narrow question:
+## Why this exists
+
+This started with a recurring feeling during long Claude Opus sessions: I would ask whether it was
+still following my instructions, and the reply would often begin with something like `You're right`,
+`I was wrong`, or `I took the wrong approach`.
+
+That feeling was the starting point, not the conclusion. Memorable failures are easy to overcount,
+so I wanted to check my impression against my own local history. Dumb n Honest now scans both Claude
+Code and Codex and asks one deliberately narrow question:
 
 > How often did each exact model explicitly acknowledge a correction in my local coding-agent
 > history?
 
-`I was wrong`, `You're right`, and their supported English and Turkish variants belong to the same
-headline event: `ACKNOWLEDGED_CORRECTION`. A turn counts at most once. The share artifacts decompose
-that total into explicit ownership (`OWNED_ERROR`) and explicit acceptance (`CONCEDED`). The audit
-reports events per 100 answered top-level human turns, Wilson 95% confidence intervals, sample
-status, and available thinking/reasoning coverage.
+The name is tongue-in-cheek: this metric can observe explicit honesty, not whether a model was
+actually dumb or wrong.
+
+## What it measures
+
+`I was wrong`, `You're right`, and supported English and Turkish variants belong to the same headline
+event: `ACKNOWLEDGED_CORRECTION`. A turn counts at most once. The share artifacts split that total
+into explicit ownership (`OWNED_ERROR`) and explicit acceptance (`CONCEDED`). The audit reports
+events per 100 answered top-level human turns, Wilson 95% confidence intervals, sample status, and
+available thinking/reasoning coverage.
 
 This is not model error rate, accuracy, or a universal leaderboard. A higher rate can reflect more
 mistakes, more user corrections, more explicit ownership, or more willingness to agree.
@@ -46,8 +59,11 @@ explicitly to run the audit. A source checkout can be tested directly; installat
 release are not required for this smoke test.
 
 ```bash
-git clone https://github.com/yamancan/dumb-n-honest.git
-cd dumb-n-honest
+smoke_root="$(mktemp -d)"
+git clone https://github.com/yamancan/dumb-n-honest.git "$smoke_root/dumb-n-honest"
+cd "$smoke_root/dumb-n-honest"
+git remote get-url origin
+git rev-parse --short HEAD
 python3 scripts/doctor.py --provider all
 smoke_output_dir="$(mktemp -d)"
 python3 scripts/run.py \
@@ -61,7 +77,9 @@ Use a new or empty output directory outside the repository. For a safe agent dog
 agent this instruction together with the repository URL:
 
 > Clone this repository and smoke-test it as a new user. You are explicitly authorized to let its
-> scripts scan my local Claude Code and Codex histories. Do not open, grep, or quote raw JSONL.
+> scripts scan my local Claude Code and Codex histories. Do not reuse an existing checkout; clone
+> into a new temporary directory and report the origin URL and commit before running anything.
+> Do not open, grep, or quote raw JSONL.
 > Run `doctor.py`, then run both providers with `en,tr`, a new output directory outside the
 > repository, and `--no-png`. Inspect only aggregate stdout and generated aggregate artifacts.
 > Report provider status, `shareable`, quality counters, turn reconciliation, model denominators,
