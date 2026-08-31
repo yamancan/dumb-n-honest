@@ -39,9 +39,39 @@ is best-effort by default; use `--require-png` only when PNG is mandatory.
 
 Agent sandboxes may ask for permission to read `~/.claude` or `~/.codex`.
 
+## Agent smoke test from this repository
+
+Giving an agent the repository URL does not by itself authorize access to local history. Ask it
+explicitly to run the audit. A source checkout can be tested directly; installation and a tagged
+release are not required for this smoke test.
+
+```bash
+git clone https://github.com/yamancan/dumb-n-honest.git
+cd dumb-n-honest
+python3 scripts/doctor.py --provider all
+smoke_output_dir="$(mktemp -d)"
+python3 scripts/run.py \
+  --provider all \
+  --languages en,tr \
+  --output-dir "$smoke_output_dir" \
+  --no-png
+```
+
+Use a new or empty output directory outside the repository. For a safe agent dogfood run, give the
+agent this instruction together with the repository URL:
+
+> Clone this repository and smoke-test it as a new user. You are explicitly authorized to let its
+> scripts scan my local Claude Code and Codex histories. Do not open, grep, or quote raw JSONL.
+> Run `doctor.py`, then run both providers with `en,tr`, a new output directory outside the
+> repository, and `--no-png`. Inspect only aggregate stdout and generated aggregate artifacts.
+> Report provider status, `shareable`, quality counters, turn reconciliation, model denominators,
+> and the artifact list. Do not modify the repository or commit, tag, push, publish, or share
+> anything. Stop after reporting the smoke-test result.
+
 ## Install
 
-Download, extract, and inspect a tagged release. From the extracted directory run one installer:
+For normal installation, download, extract, and inspect a tagged release. From the extracted
+directory run one installer:
 
 ```bash
 python3 scripts/install.py --target codex
