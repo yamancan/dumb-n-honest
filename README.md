@@ -62,9 +62,14 @@ the pinned official release when it is not cached, verifies its SHA256 before ev
 the verified Python scripts from a fresh temporary directory:
 
 ```bash
+npx dumb-n-honest
 npx dumb-n-honest doctor
 npx dumb-n-honest run --output-dir ./dumb-n-honest-output --no-png
 ```
+
+The first command runs the full audit with both providers and both language packs. It creates a new
+timestamped `dumb-n-honest-output-*` directory in the current working directory, so repeated runs
+never overwrite existing results.
 
 The launcher uses the network only to fetch a missing release archive. The audit itself is offline,
 and nothing is published automatically. Users who prefer to inspect every file before execution can

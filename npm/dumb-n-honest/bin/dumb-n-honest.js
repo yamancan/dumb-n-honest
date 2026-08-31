@@ -17,9 +17,10 @@ const {
 const { homedir, tmpdir } = require("node:os");
 const { join } = require("node:path");
 
-const DEFAULT_VERSION = "0.2.5";
+const DEFAULT_VERSION = "0.2.6";
 const PINNED_SHA256 = {
   "0.2.5": "298da142699196fef4579917757474c4fd5238579e61d7300cde795e6ee19648",
+  "0.2.6": "4d4206c18d39571c5b34f8a20f432ed560d11db6f4f38ad1a51be277fe1d70bd",
 };
 const DEFAULT_BASE_URL = "https://github.com/yamancan/dumb-n-honest/releases/download";
 const MAX_PACKAGE_BYTES = 10 * 1024 * 1024;
@@ -107,8 +108,12 @@ function usage() {
   process.stdout.write(`dumb-n-honest — private local correction-acknowledgment benchmark
 
 Usage:
+  dumb-n-honest
   dumb-n-honest doctor [--provider all|claude|codex]
   dumb-n-honest run --output-dir <new-dir> [--provider all|claude|codex] [--languages en,tr] [--no-png] [--require-png] [--github-url <url>]
+
+With no arguments, the audit runs with both providers and both language packs and writes to a new
+timestamped dumb-n-honest-output directory in the current working directory.
 
 Requires Python 3.10+ and local Claude Code or Codex history.
 The launcher downloads a pinned release once and verifies its SHA256 before every run.
@@ -122,9 +127,30 @@ Environment:
 `);
 }
 
+function defaultOutputDirectory(baseDirectory = process.cwd(), now = new Date()) {
+  const pad = (value) => String(value).padStart(2, "0");
+  const timestamp = [
+    now.getFullYear(),
+    pad(now.getMonth() + 1),
+    pad(now.getDate()),
+    "-",
+    pad(now.getHours()),
+    pad(now.getMinutes()),
+    pad(now.getSeconds()),
+  ].join("");
+  const baseName = `dumb-n-honest-output-${timestamp}`;
+  let candidate = join(baseDirectory, baseName);
+  let suffix = 2;
+  while (existsSync(candidate)) {
+    candidate = join(baseDirectory, `${baseName}-${suffix}`);
+    suffix += 1;
+  }
+  return candidate;
+}
+
 async function main() {
   const argv = process.argv.slice(2);
-  if (argv.includes("-h") || argv.includes("--help") || argv.length === 0) {
+  if (argv.includes("-h") || argv.includes("--help")) {
     usage();
     return 0;
   }
@@ -144,7 +170,12 @@ async function main() {
     const skillRoot = join(executionRoot, "dumb-n-honest");
     let script;
     let rest;
-    if (argv[0] === "doctor") {
+    if (argv.length === 0) {
+      const outputDirectory = defaultOutputDirectory();
+      process.stderr.write(`dumb-n-honest: running audit; output directory: ${outputDirectory}\n`);
+      script = join(skillRoot, "scripts", "run.py");
+      rest = ["--output-dir", outputDirectory];
+    } else if (argv[0] === "doctor") {
       script = join(skillRoot, "scripts", "doctor.py");
       rest = argv.slice(1);
     } else if (argv[0] === "run" || argv[0].startsWith("--")) {
@@ -163,11 +194,15 @@ async function main() {
   }
 }
 
-main()
-  .then((status) => {
-    process.exitCode = status;
-  })
-  .catch((error) => {
-    process.stderr.write(`dumb-n-honest: ${error && error.message ? error.message : String(error)}\n`);
-    process.exitCode = 1;
-  });
+if (require.main === module) {
+  main()
+    .then((status) => {
+      process.exitCode = status;
+    })
+    .catch((error) => {
+      process.stderr.write(`dumb-n-honest: ${error && error.message ? error.message : String(error)}\n`);
+      process.exitCode = 1;
+    });
+}
+
+module.exports = { defaultOutputDirectory };

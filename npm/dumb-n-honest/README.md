@@ -4,9 +4,14 @@ Run the [dumb-n-honest](https://github.com/yamancan/dumb-n-honest) private local
 one command:
 
 ```bash
+npx dumb-n-honest
 npx dumb-n-honest doctor
 npx dumb-n-honest run --output-dir ./my-audit --no-png
 ```
+
+With no arguments, the launcher runs the full audit with both providers and both language packs. It
+writes to a new timestamped `dumb-n-honest-output-*` directory in the current working directory, so
+existing results are never overwritten.
 
 This package is a thin launcher with no npm dependencies. It:
 
