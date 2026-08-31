@@ -1,6 +1,9 @@
 # Dumb n Honest
 
-A private, local benchmark of how often Claude Code and Codex explicitly acknowledge a correction.
+> We can't prove a model was wrong from a transcript. We can count when it explicitly acknowledges
+> a correction.
+
+A private, local, bilingual benchmark for Claude Code and Codex history. **Not an error rate.**
 
 ## Why this exists
 
