@@ -33,9 +33,12 @@
     .rate { text-align:right; font:800 34px/1 ui-sans-serif, system-ui, sans-serif; }
     .rate-label { margin-top:7px; text-align:right; color:var(--muted); font-size:13px; }
     .omitted { margin-top:12px; color:var(--muted); font-size:13px; }
-    footer { padding-top:18px; border-top:1px solid var(--ink); font-size:14px; line-height:1.45; color:#333; }
+    footer { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:32px; align-items:end; padding-top:18px; border-top:1px solid var(--ink); font-size:14px; line-height:1.45; color:#333; }
     footer strong { color:var(--ink); }
-    .benchmark { margin-top:7px; color:var(--ink); }
+    .benchmark { overflow:hidden; max-width:560px; margin-top:7px; color:var(--ink); text-overflow:ellipsis; white-space:nowrap; }
+    .cta { padding-left:28px; border-left:3px solid var(--conceded); text-align:right; }
+    .cta-label { color:var(--conceded); font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    .cta-command { margin-top:4px; color:var(--ink); font:800 23px/1.1 ui-sans-serif, system-ui, sans-serif; letter-spacing:-.025em; white-space:nowrap; }
   </style>
 </head>
 <body>
@@ -43,9 +46,9 @@
     <div class="eyebrow">Local coding-agent benchmark</div>
     <h1>Dumb n Honest</h1>
     <p class="dek">Correction acknowledgments / 100 answered turns.</p>
-    <div class="legend" aria-label="Bar colors"><span class="legend-item"><span class="swatch swatch-owned"></span><span>“I was wrong” — owned error</span></span><span class="legend-item"><span class="swatch swatch-conceded"></span><span>“You’re right” — conceded</span></span></div>
+    <div class="legend" aria-label="Bar colors"><span class="legend-item"><span class="swatch swatch-owned"></span><span>“I was wrong” · owned error</span></span><span class="legend-item"><span class="swatch swatch-conceded"></span><span>“You’re right” · conceded</span></span></div>
     <section class="models">@@ROWS@@@@OMITTED@@</section>
-    <footer><strong>Higher ≠ worse.</strong> Acknowledgment rate, not model error rate.<div class="benchmark">@@BENCHMARK_URL@@</div></footer>
+    <footer><div><strong>Higher ≠ worse.</strong> Acknowledgment rate, not model error rate.<div class="benchmark">@@BENCHMARK_URL@@</div></div><div class="cta"><div class="cta-label">Run yours locally</div><div class="cta-command">npx dumb-n-honest</div></div></footer>
   </main>
   <script>document.documentElement.dataset.overflow = document.querySelector('#poster').scrollHeight > 1350 ? 'true' : 'false';</script>
 </body>

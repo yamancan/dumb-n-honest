@@ -75,6 +75,9 @@ The launcher uses the network only to fetch a missing release archive. The audit
 and nothing is published automatically. Users who prefer to inspect every file before execution can
 use the tagged-release installation below.
 
+The repository includes `assets/social-preview.png` for link cards and announcements. Personal audit
+results remain local and are shared only when the user attaches the generated `poster.png`.
+
 ## Agent smoke test from this repository
 
 Giving an agent the repository URL does not by itself authorize access to local history. Ask it
@@ -171,11 +174,12 @@ Without an override, share artifacts link to
 - `tweet.txt`: English post draft of at most 280 characters.
 - `alt-text.txt`: objective chart description.
 
-The lean poster reserves up to three rows per provider. Each stacked bar uses black for explicit
+The lean poster reserves up to three rows per provider and includes a local `npx dumb-n-honest`
+call to action. Each stacked bar uses black for explicit
 ownership such as `I was wrong` and orange for explicit acceptance such as `You're right`; the
 number at right is their deduplicated total per 100 turns. The row also shows the subtype rates,
-denominator, total confidence interval, and sample status. The post summarizes the same split for up
-to two Opus models and two Codex models by answered-turn volume without declaring the highest total
+denominator, total confidence interval, and sample status. The post pairs a short personal hook with
+the total observed workload and one readable result per provider without declaring the highest total
 a winner. Both include the benchmark link. Nothing is published automatically.
 
 ## Measurement contract

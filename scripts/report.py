@@ -147,53 +147,93 @@ def compact_model(provider: str, model_id: str) -> str:
 
 
 def social_models(models: list[tuple[str, dict[str, Any]]]) -> list[tuple[str, dict[str, Any]]]:
-    opus = [
-        item
-        for item in models
-        if item[0] == "claude" and str(item[1].get("model_id", "")).startswith("claude-opus-")
-    ][:2]
-    if not opus:
-        opus = [item for item in models if item[0] == "claude"][:2]
-    codex = [item for item in models if item[0] == "codex"][:2]
-    return opus + codex
+    selected = []
+    for provider in ("claude", "codex"):
+        provider_models = [item for item in models if item[0] == provider]
+        if provider == "claude":
+            opus = [
+                item
+                for item in provider_models
+                if str(item[1].get("model_id", "")).startswith("claude-opus-")
+            ]
+            if opus:
+                provider_models = opus
+        if provider_models:
+            selected.append(provider_models[0])
+    return selected
 
 
 def build_tweet(
     models: list[tuple[str, dict[str, Any]]],
     github_url: str | None,
     quarantined_turns: int = 0,
+    total_answered_turns: int | None = None,
 ) -> str:
     benchmark_url = github_url or DEFAULT_BENCHMARK_URL
     if not models:
         base = (
             "I audited my local coding-agent history for explicit correction acknowledgments. "
-            "No exact model had 100 answered turns yet. Personal observational benchmark—not model error rate."
+            "No exact model had 100 answered turns yet. Personal workload, not error rate."
         )
-    else:
-        entries = []
-        for provider, model in social_models(models):
-            owned = correction_subtype_for(model, "owned_error")
-            conceded = correction_subtype_for(model, "conceded")
-            label = compact_model(provider, str(model["model_id"]))
-            entries.append(
-                f"{label} {owned['per_100_turns']:.2f}+{conceded['per_100_turns']:.2f}"
-            )
-        suffix = (
-            f"Observational—not model error rate. {quarantined_turns} unattributed "
-            f"{'turn' if quarantined_turns == 1 else 'turns'} excluded."
-            if quarantined_turns
-            else "Observational—not model error rate."
+        candidate = f"{base}\n\n{benchmark_url}"
+        if len(candidate) <= 280:
+            return candidate
+        available = max(0, 278 - len(benchmark_url))
+        return f"{base[:available].rstrip()}…\n\n{benchmark_url}"
+
+    featured = social_models(models)
+    providers = {provider for provider, _ in featured}
+    history = " + ".join(
+        label for provider, label in (("claude", "Claude Code"), ("codex", "Codex"))
+        if provider in providers
+    ) or "coding-agent"
+    turns = total_answered_turns
+    if turns is None:
+        turns = sum(int(model.get("answered_human_turns") or 0) for _, model in models)
+    entries = []
+    for provider, model in featured:
+        acknowledgment = acknowledgment_for(model)
+        entries.append(
+            f"{compact_model(provider, str(model['model_id']))}: "
+            f"{float(acknowledgment['per_100_turns']):.2f}"
         )
-        base = (
-            "My correction-acknowledgment rates /100 turns (I was wrong + You’re right): "
-            + "; ".join(entries)
-            + f". {suffix}"
-        )
-    candidate = f"{base} {benchmark_url}"
-    if len(candidate) <= 280:
-        return candidate
+    result_lines = "\n".join(
+        f"{entry} correction acknowledgments per 100 turns" if index == 0 else entry
+        for index, entry in enumerate(entries)
+    )
+    disclosure = (
+        f" {quarantined_turns} unattributed "
+        f"{'turn was' if quarantined_turns == 1 else 'turns were'} excluded."
+        if quarantined_turns
+        else ""
+    )
+    candidates = [
+        (
+            "I kept noticing coding agents say “you’re right,” so I audited "
+            f"{turns:,} answered turns from my {history} history.\n\n"
+            f"{result_lines}\n\n"
+            f"⚠️ Personal workload, not error rate.{disclosure}\n\n"
+            f"{benchmark_url}"
+        ),
+        (
+            f"I audited {turns:,} answered turns from my {history} history for explicit "
+            "correction acknowledgments.\n\n"
+            f"{result_lines}\n\n"
+            f"⚠️ Personal workload, not error rate.{disclosure}\n\n"
+            f"{benchmark_url}"
+        ),
+        (
+            f"I audited {turns:,} answered turns from my {history} history. "
+            f"⚠️ Personal workload, not error rate.{disclosure}\n\n"
+            f"{benchmark_url}"
+        ),
+    ]
+    for candidate in candidates:
+        if len(candidate) <= 280:
+            return candidate
     available = max(0, 278 - len(benchmark_url))
-    return f"{base[:available].rstrip()}… {benchmark_url}"
+    base = candidates[-1].rsplit("\n\n", 1)[0]
+    return f"{base[:available].rstrip()}…\n\n{benchmark_url}"
 
 
 def quarantine_notes(result: dict[str, Any]) -> tuple[list[str], int]:
@@ -274,7 +314,7 @@ def build_alt_text(
         + " ".join(rows)
         + suffix
         + quality_suffix
-        + f" Benchmark: {benchmark_url}."
+        + f" Run yours locally with npx dumb-n-honest. Benchmark: {benchmark_url}."
     )
     return text[:1000]
 
@@ -425,7 +465,7 @@ def main() -> None:
         else ""
     )
     quality_text = (
-        f'<p class="omitted">Data quality — {html.escape("; ".join(quality_notes))}.</p>'
+        f'<p class="omitted">Data quality: {html.escape("; ".join(quality_notes))}.</p>'
         if quality_notes
         else ""
     )
@@ -456,7 +496,17 @@ def main() -> None:
     write_private(args.output_dir / "poster.html", poster)
     write_private(
         args.output_dir / "tweet.txt",
-        build_tweet(models, benchmark_url, quarantined_turns) + "\n",
+        build_tweet(
+            models,
+            benchmark_url,
+            quarantined_turns,
+            sum(
+                int(model.get("answered_human_turns") or 0)
+                for provider in result.get("providers", {}).values()
+                for model in provider.get("models", [])
+            ),
+        )
+        + "\n",
     )
     write_private(
         args.output_dir / "alt-text.txt",

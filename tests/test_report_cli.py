@@ -22,6 +22,21 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ReportCliTests(unittest.TestCase):
+    def test_social_preview_asset_is_self_contained_and_current(self) -> None:
+        html = (ROOT / "assets" / "social-preview.html").read_text(encoding="utf-8")
+        png = (ROOT / "assets" / "social-preview.png").read_bytes()
+
+        self.assertIn("width:1280px", html)
+        self.assertIn("height:640px", html)
+        self.assertIn("Content-Security-Policy", html)
+        self.assertIn("npx dumb-n-honest", html)
+        self.assertIn("github.com/yamancan/dumb-n-honest", html)
+        self.assertNotIn("<script src=", html)
+        self.assertNotIn("https://", html)
+        self.assertEqual(png[:8], b"\x89PNG\r\n\x1a\n")
+        width, height = struct.unpack(">II", png[16:24])
+        self.assertEqual((width, height), (1280, 640))
+
     def test_report_writes_network_free_html_tweet_and_alt_text(self) -> None:
         fixture = ROOT / "tests" / "fixtures" / "results" / "report.json"
         with tempfile.TemporaryDirectory() as output_dir:
@@ -65,6 +80,8 @@ class ReportCliTests(unittest.TestCase):
         self.assertIn('class="bar-conceded" style="width:37.500%"', html)
         self.assertIn("Higher ≠ worse", html)
         self.assertIn("not model error rate", html)
+        self.assertIn("Run yours locally", html)
+        self.assertIn("npx dumb-n-honest", html)
         self.assertIn("Content-Security-Policy", html)
         self.assertNotIn("answered-turn share", html)
         self.assertNotIn("reasoning tokens", html)
@@ -72,19 +89,21 @@ class ReportCliTests(unittest.TestCase):
         self.assertNotIn("fonts.googleapis.com", html)
         self.assertNotIn("<script src=", html)
         self.assertLessEqual(len(tweet), 280)
-        self.assertIn("correction-acknowledgment rates", tweet)
-        self.assertIn("I was wrong + You’re right", tweet)
-        self.assertIn("Opus 5 5.00+3.00", tweet)
-        self.assertIn("Opus 4.8 1.00+4.00", tweet)
-        self.assertIn("Codex 5.6 Sol 2.00+1.00", tweet)
-        self.assertIn("Codex 5.5 1.00+2.00", tweet)
-        self.assertIn("not model error rate", tweet)
+        self.assertIn("I kept noticing coding agents say", tweet)
+        self.assertIn("3,850 answered turns", tweet)
+        self.assertIn("Opus 5: 8.00 correction acknowledgments per 100 turns", tweet)
+        self.assertIn("Codex 5.6 Sol: 3.00", tweet)
+        self.assertNotIn("5.00+3.00", tweet)
+        self.assertNotIn("—", tweet)
+        self.assertIn("not error rate", tweet)
+        self.assertIn("⚠️", tweet)
         self.assertIn("https://github.com/example/dumb-n-honest", tweet)
         self.assertIn("https://github.com/example/dumb-n-honest", html)
         self.assertLessEqual(len(alt_text), 1000)
         self.assertIn("Claude Opus 5", alt_text)
         self.assertIn("Codex GPT-5.6 Sol", alt_text)
         self.assertIn("5.00 owned and 3.00 conceded per 100 turns", alt_text)
+        self.assertIn("Run yours locally with npx dumb-n-honest", alt_text)
         self.assertIn("https://github.com/example/dumb-n-honest", alt_text)
 
     def test_provider_balancing_keeps_codex_visible(self) -> None:
@@ -157,7 +176,7 @@ class ReportCliTests(unittest.TestCase):
             alt_text = (output_dir / "alt-text.txt").read_text(encoding="utf-8")
 
         self.assertIn("Codex: 4 turns excluded (unknown model, 0.19%)", poster)
-        self.assertIn("4 unattributed turns excluded", tweet)
+        self.assertIn("4 unattributed turns were excluded", tweet)
         self.assertLessEqual(len(tweet.strip()), 280)
         self.assertIn("Codex: 4 turns excluded (unknown model, 0.19%)", alt_text)
 
