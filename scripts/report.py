@@ -392,7 +392,8 @@ def render_png(poster_html: Path, output: Path) -> None:
             measured = subprocess.run(
                 [*common, "--dump-dom", uri],
                 capture_output=True,
-                text=True,
+                encoding="utf-8",
+                errors="replace",
                 check=False,
                 timeout=10,
             )
