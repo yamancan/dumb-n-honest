@@ -1,0 +1,29 @@
+{
+  "name": "dumbandhonest",
+  "version": "0.2.5",
+  "description": "Private local benchmark of explicit correction acknowledgments in your Claude Code and Codex history. Downloads and SHA256-verifies the official dumb-n-honest release, then runs it with your local Python 3.10+. No transcript content leaves your machine.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yamancan/dumb-n-honest"
+  },
+  "homepage": "https://github.com/yamancan/dumb-n-honest#readme",
+  "bugs": "https://github.com/yamancan/dumb-n-honest/issues",
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "dumbandhonest": "bin/dumbandhonest.js"
+  },
+  "files": [
+    "bin",
+    "README.md"
+  ],
+  "keywords": [
+    "claude-code",
+    "codex",
+    "benchmark",
+    "cli",
+    "audit"
+  ]
+}
