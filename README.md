@@ -55,6 +55,21 @@ is best-effort by default; use `--require-png` only when PNG is mandatory.
 
 Agent sandboxes may ask for permission to read `~/.claude` or `~/.codex`.
 
+## Quick start with npx
+
+The optional npx launcher has no npm dependencies. It requires Node 18+ and Python 3.10+, downloads
+the pinned official release when it is not cached, verifies its SHA256 before every run, and executes
+the verified Python scripts from a fresh temporary directory:
+
+```bash
+npx dumb-n-honest doctor
+npx dumb-n-honest run --output-dir ./dumb-n-honest-output --no-png
+```
+
+The launcher uses the network only to fetch a missing release archive. The audit itself is offline,
+and nothing is published automatically. Users who prefer to inspect every file before execution can
+use the tagged-release installation below.
+
 ## Agent smoke test from this repository
 
 Giving an agent the repository URL does not by itself authorize access to local history. Ask it

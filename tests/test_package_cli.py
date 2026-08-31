@@ -6,8 +6,9 @@ import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from unittest.mock import patch
 
-from scripts.package import skill_version
+from scripts.package import included_files, skill_version
 from scripts.scan import TOOL_VERSION
 
 
@@ -91,6 +92,25 @@ class PackageCliTests(unittest.TestCase):
             self.assertEqual(completed.returncode, 0, completed.stderr)
             self.assertTrue((output / "results.json").is_file())
             self.assertTrue((output / "tweet.txt").is_file())
+
+    def test_package_rejects_symlinked_sources(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            for name in ("SKILL.md", "README.md", "LICENSE"):
+                (root / name).write_text(name, encoding="utf-8")
+            for directory in ("agents", "assets", "patterns", "references", "scripts"):
+                (root / directory).mkdir()
+            target = root / "outside.txt"
+            target.write_text("private", encoding="utf-8")
+            link = root / "scripts" / "leak.txt"
+            try:
+                link.symlink_to(target)
+            except OSError as error:
+                self.skipTest(f"symlinks unavailable: {error}")
+
+            with patch("scripts.package.SKILL_ROOT", root):
+                with self.assertRaisesRegex(SystemExit, "must not contain symlinks"):
+                    included_files()
 
 
 if __name__ == "__main__":

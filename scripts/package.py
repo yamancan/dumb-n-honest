@@ -21,13 +21,22 @@ def skill_version() -> str:
 
 
 def included_files() -> list[Path]:
-    files = [SKILL_ROOT / name for name in INCLUDED_ROOT_FILES]
+    files = []
+    for name in INCLUDED_ROOT_FILES:
+        path = SKILL_ROOT / name
+        if path.is_symlink() or not path.is_file():
+            raise SystemExit(f"Package source must be a regular file: {name}")
+        files.append(path)
     for directory in INCLUDED_DIRECTORIES:
-        files.extend(
-            path
-            for path in (SKILL_ROOT / directory).rglob("*")
-            if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc"
-        )
+        source_root = SKILL_ROOT / directory
+        if source_root.is_symlink() or not source_root.is_dir():
+            raise SystemExit(f"Package source must be a regular directory: {directory}")
+        for path in source_root.rglob("*"):
+            if path.is_symlink():
+                relative = path.relative_to(SKILL_ROOT).as_posix()
+                raise SystemExit(f"Package source must not contain symlinks: {relative}")
+            if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc":
+                files.append(path)
     return sorted(files, key=lambda path: path.relative_to(SKILL_ROOT).as_posix())
 
 
