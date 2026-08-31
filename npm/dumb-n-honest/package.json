@@ -1,5 +1,5 @@
 {
-  "name": "dumbandhonest",
+  "name": "dumb-n-honest",
   "version": "0.2.5",
   "description": "Private local benchmark of explicit correction acknowledgments in your Claude Code and Codex history. Downloads and SHA256-verifies the official dumb-n-honest release, then runs it with your local Python 3.10+. No transcript content leaves your machine.",
   "license": "MIT",
@@ -13,7 +13,7 @@
     "node": ">=18"
   },
   "bin": {
-    "dumbandhonest": "bin/dumbandhonest.js"
+    "dumb-n-honest": "bin/dumbandhonest.js"
   },
   "files": [
     "bin",

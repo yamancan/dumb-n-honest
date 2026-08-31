@@ -1,4 +1,4 @@
-# dumbandhonest
+# dumb-n-honest (npx)
 
 Run the [dumb-n-honest](https://github.com/yamancan/dumb-n-honest) private local benchmark with
 one command:

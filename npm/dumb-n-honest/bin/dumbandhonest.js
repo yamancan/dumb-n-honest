@@ -22,7 +22,7 @@ const skillRoot = join(installRoot, "dumb-n-honest");
 const markerPath = join(installRoot, ".verified");
 
 function fail(message) {
-  process.stderr.write(`dumbandhonest: ${message}\n`);
+  process.stderr.write(`dumb-n-honest: ${message}\n`);
   process.exit(1);
 }
 
@@ -76,7 +76,7 @@ async function ensureInstalled(python) {
     rmSync(installRoot, { recursive: true, force: true });
   }
   mkdirSync(installRoot, { recursive: true });
-  process.stderr.write(`dumbandhonest: fetching verified release v${version}...\n`);
+  process.stderr.write(`dumb-n-honest: fetching verified release v${version}...\n`);
   await download();
   const actual = sha256(packagePath);
   if (actual !== expected) {
