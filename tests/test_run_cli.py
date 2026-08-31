@@ -40,11 +40,55 @@ class RunCliTests(unittest.TestCase):
             self.assertTrue((output / "poster.html").is_file())
             self.assertTrue((output / "tweet.txt").is_file())
             self.assertTrue((output / "alt-text.txt").is_file())
+            self.assertIn(
+                "correction acknowledgments",
+                (output / "tweet.txt").read_text(encoding="utf-8"),
+            )
             result = json.loads((output / "results.json").read_text(encoding="utf-8"))
 
         model = result["providers"]["claude"]["models"][0]
         self.assertEqual(model["owned_error"]["by_language"], {"tr": 1})
         self.assertNotIn("Haklısın", completed.stdout)
+        self.assertEqual(model["acknowledged_correction"]["count"], 1)
+
+    def test_incomplete_scan_keeps_private_results_but_refuses_share_pack(self) -> None:
+        with tempfile.TemporaryDirectory() as fixture_dir, tempfile.TemporaryDirectory() as temp_dir:
+            fixture_root = Path(fixture_dir)
+            session = fixture_root / "projects" / "demo" / "malformed.jsonl"
+            session.parent.mkdir(parents=True)
+            session.write_text(
+                "not-json\n"
+                '{"type":"user","message":{"role":"user","content":"Synthetic"}}\n'
+                '{"type":"assistant","message":{"role":"assistant","model":"claude-opus-5",'
+                '"content":[{"type":"text","text":"You are right."}]}}\n',
+                encoding="utf-8",
+            )
+            output = Path(temp_dir) / "audit"
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts" / "run.py"),
+                    "--provider",
+                    "claude",
+                    "--claude-root",
+                    str(fixture_root),
+                    "--output-dir",
+                    str(output),
+                    "--no-png",
+                ],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            self.assertNotEqual(completed.returncode, 0)
+            self.assertTrue((output / "results.json").is_file())
+            self.assertFalse((output / "poster.html").exists())
+            self.assertIn("Scanning local history", completed.stderr)
+            self.assertIn("Scan complete", completed.stderr)
+            self.assertIn("malformed_records=1", completed.stderr)
+            self.assertIn("Aggregate results.json was preserved", completed.stderr)
 
     def test_failures_do_not_echo_private_output_paths_or_tracebacks(self) -> None:
         fixture_root = ROOT / "tests" / "fixtures" / "claude_owned_tr"

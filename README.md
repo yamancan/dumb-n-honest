@@ -1,11 +1,20 @@
 # dumb-n-honest
 
-A private, bilingual audit of explicit self-corrections in local Claude Code and Codex history.
+A private, bilingual personal observational benchmark for local Claude Code and Codex history.
 
-It answers a narrow question: how often did each exact model visibly own an error on your actual
-workload? It also reports available thinking/reasoning usage and its coverage.
+It answers one narrow question:
 
-This is not an error-rate benchmark. It cannot find mistakes the agent did not acknowledge.
+> How often did each exact model explicitly acknowledge a correction in my local coding-agent
+> history?
+
+`I was wrong`, `You're right`, and their supported English and Turkish variants belong to the same
+headline event: `ACKNOWLEDGED_CORRECTION`. A turn counts at most once. The share artifacts decompose
+that total into explicit ownership (`OWNED_ERROR`) and explicit acceptance (`CONCEDED`). The audit
+reports events per 100 answered top-level human turns, Wilson 95% confidence intervals, sample
+status, and available thinking/reasoning coverage.
+
+This is not model error rate, accuracy, or a universal leaderboard. A higher rate can reflect more
+mistakes, more user corrections, more explicit ownership, or more willingness to agree.
 
 ## Privacy
 
@@ -13,28 +22,49 @@ This is not an error-rate benchmark. It cannot find mistakes the agent did not a
 - The scanner makes no network requests.
 - Raw prompts and replies are never written to output.
 - Output excludes paths, projects, session/request IDs, usernames, emails, excerpts, and hashes.
+- Untrusted model and effort strings are constrained before they can enter aggregate output.
 - Nothing is posted automatically.
 
-The repository is intentionally small and uses no runtime packages, so the transcript-reading code
-can be audited directly.
+The repository uses no runtime packages so the transcript-reading boundary can be audited directly.
+Keep `results.json` private. Preview `poster.png`, `tweet.txt`, and `alt-text.txt` before sharing.
 
 ## Requirements
 
 - Python 3.10 or newer; standard library only.
-- Claude Code and/or Codex local transcript history.
-- Chrome, Chromium, Edge, or Brave for PNG export. Without one, use `--no-png`; HTML is still
-  generated.
+- Local Claude Code and/or Codex transcript history.
+- Chrome, Chromium, Edge, or Brave for PNG export.
 
-No `pip install`, `npm install`, remote font, or network connection is required at runtime.
+HTML, aggregate JSON, the English post draft, and alt text do not require a browser. PNG generation
+is best-effort by default; use `--require-png` only when PNG is mandatory.
 
-## Skill invocation safety
+Agent sandboxes may ask for permission to read `~/.claude` or `~/.codex`.
 
-The portable `SKILL.md` follows the open Agent Skills format and contains an explicit-authorization
-gate. Codex also reads `agents/openai.yaml`, which disables implicit invocation.
+## Install
 
-For a personal Claude Code installation, set the skill to `user-invocable-only` in `/skills` before
-running it. This keeps it hidden from Claude until you invoke `/dumb-n-honest`. Do not install this
-privacy-sensitive workflow as an auto-invoked skill.
+Download, extract, and inspect a tagged release. From the extracted directory run one installer:
+
+```bash
+python3 scripts/install.py --target codex
+python3 scripts/install.py --target claude
+```
+
+The installers refuse to overwrite an existing installation. Codex receives
+`agents/openai.yaml` with implicit invocation disabled. The Claude installer adds Claude Code's
+`disable-model-invocation: true` field to the installed copy while the release source remains valid
+portable Agent Skills frontmatter. A script-level authorization gate is retained in both variants.
+
+Invoke `$dumb-n-honest` in Codex or `/dumb-n-honest` in Claude Code. On native Windows, use `py -3`
+instead of `python3` when needed.
+
+## Check the environment
+
+The doctor checks Python, local history presence, and whether an optional browser is installed
+without reading transcript content. `detected-may-require-approval` means the executable exists;
+a sandboxed agent may still request permission before launching it:
+
+```bash
+python3 scripts/doctor.py --provider all
+```
 
 ## Run
 
@@ -45,38 +75,87 @@ python3 scripts/run.py --output-dir ./dumb-n-honest-output
 Defaults: both providers and both language packs (`en,tr`). Examples:
 
 ```bash
-python3 scripts/run.py --provider claude --languages en,tr --output-dir ./dumb-n-honest-output-claude
-python3 scripts/run.py --provider codex --languages tr --output-dir ./dumb-n-honest-output-codex
-python3 scripts/run.py --output-dir ./dumb-n-honest-output-html --no-png
+python3 scripts/run.py --provider claude --languages en,tr --output-dir ./audit-claude
+python3 scripts/run.py --provider codex --languages tr --output-dir ./audit-codex
+python3 scripts/run.py --output-dir ./audit-html --no-png
+python3 scripts/run.py --output-dir ./audit-strict --require-png
 ```
 
-The output directory must be new or empty. Existing results are never overwritten.
-Repository-local directories beginning with `dumb-n-honest-output` are ignored by Git; keep personal
-aggregate results and share packs out of version control.
-
-An optional repository URL can be included in the post draft:
+The output directory must be new or empty. Existing results are never overwritten. Optional GitHub
+URL override for the generated post and poster:
 
 ```bash
-python3 scripts/run.py --output-dir ./dumb-n-honest-output-share --github-url https://github.com/OWNER/dumb-n-honest
+python3 scripts/run.py --output-dir ./audit-share \
+  --github-url https://github.com/OWNER/dumb-n-honest
 ```
+
+Without an override, share artifacts link to
+`https://github.com/yamancan/dumb-n-honest`, the canonical benchmark repository.
 
 ## Outputs
 
-- `results.json`: complete aggregate results and diagnostics.
-- `poster.html`: network-free 1080×1350 poster source.
-- `poster.png`: share image when a supported browser is available.
+- `results.json`: private aggregate results, versions, quality status, and diagnostics.
+- `poster.html`: self-contained, network-free 1080×1350 poster source.
+- `poster.png`: share image when a compatible browser can render it.
 - `tweet.txt`: English post draft of at most 280 characters.
 - `alt-text.txt`: objective chart description.
 
-The poster uses `OWNED_ERROR` as its headline metric. `CONCEDED` remains separate because phrases
-such as “you're right” and “haklısın” may be ordinary agreement.
+The lean poster reserves up to three rows per provider. Each stacked bar uses black for explicit
+ownership such as `I was wrong` and orange for explicit acceptance such as `You're right`; the
+number at right is their deduplicated total per 100 turns. The row also shows the subtype rates,
+denominator, total confidence interval, and sample status. The post summarizes the same split for up
+to two Opus models and two Codex models by answered-turn volume without declaring the highest total
+a winner. Both include the benchmark link. Nothing is published automatically.
 
-## Supported language signals
+## Measurement contract
 
-English and Turkish are enabled by default and applied turn by turn. Turkish matching accepts both
-native spelling (`yanıldım`, `haklısın`) and common ASCII spelling (`yanildim`, `haklisin`). Pattern
-packs include explicit ownership, concessions, uncertainty/meta exclusions, and worked synthetic examples. See
-[`patterns/en.json`](patterns/en.json) and [`patterns/tr.json`](patterns/tr.json).
+The denominator is one answered top-level human turn attributed to exactly one raw model ID.
+Streaming fragments and tool activity stay inside that turn. Sidechains, subagents, collaboration
+rollouts, injected messages, tool results, unanswered turns, and mixed-model turns do not enter an
+exact-model denominator.
+
+Headline:
+
+```text
+ACKNOWLEDGED_CORRECTION = OWNED_ERROR OR CONCEDED
+```
+
+`OWNED_ERROR` and `CONCEDED` remain diagnostic subtypes. Ambiguous phrases such as `fair point`,
+`that's right`, `good catch`, and `iyi yakaladın` are `SOFT_CONCESSION` diagnostics and do not enter
+the headline rate.
+
+Every rate includes its numerator, denominator, Wilson 95% confidence interval, and sample status:
+
+- fewer than 500 turns or 10 events: `exploratory`;
+- 10–19 events: `sample-limited`;
+- at least 20 events: `sample-sufficient`.
+
+These labels describe turn-level sample size only. Wilson intervals treat turns as independent;
+sessions and projects may be clustered. Different tasks, periods, tools, effort, context length,
+and user behavior still confound model comparisons.
+
+Thinking/reasoning tokens are a separate resource-use diagnostic in private `results.json`.
+Missing observations stay missing. The social poster omits token metrics so partial coverage and
+provider-specific tokenization cannot be mistaken for a model ranking. Claude and Codex token
+counts are never ranked against each other.
+
+See [`references/measurement.md`](references/measurement.md) for the full contract.
+
+## Quality gates
+
+The scanner records adapter and pattern versions plus provider status. A missing optional provider
+is allowed when another provider is valid. Unknown model IDs are never emitted: affected turns are
+quarantined from exact-model denominators. Up to 1% of observed top-level human turns may be
+quarantined under `OK_WITH_WARNINGS`, with the omission disclosed in the poster, post, and alt text.
+More than 1%, malformed data, unsupported/empty schema, unknown effort metadata, file errors, or
+failed turn reconciliation mark results unshareable; private `results.json` is preserved but the
+share pack is refused. Excluded subagent and duplicate-session files do not contribute metadata or
+turns to quality gates. Claude subagent transcripts under `subagents/` are excluded by path; Claude
+meta/compaction records and their associated assistant output are excluded from turns. If a top-level transcript disappears while the
+scan runs (an active agent session), the result is `INCOMPLETE`; re-run when nothing is writing. The renderer requires schema 2.0 with an explicit passing quality status.
+
+All eligible local records found in the selected roots are scanned. The tool cannot prove that
+deleted, remote, retained-out, or unsupported conversations do not exist.
 
 ## Development
 
@@ -84,9 +163,10 @@ packs include explicit ownership, concessions, uncertainty/meta exclusions, and 
 python3 -m unittest discover -s tests -v
 ```
 
-All fixtures are invented. The tests cover phrase families, false positives, turn reconstruction,
-mixed-model attribution, Claude/Codex parity, reasoning coverage, privacy canaries, one-command
-output, and exact PNG dimensions.
+Fixtures are invented and test deterministic behavior, adversarial phrase cases, turn
+reconstruction, exact-model attribution, schema drift, reasoning coverage, privacy canaries,
+best-effort rendering, and extracted-package execution. Synthetic tests do not establish real-world
+classifier precision or recall; a labeled EN/TR gold set is required before claiming that.
 
 Not affiliated with or endorsed by Anthropic or OpenAI. Claude, Claude Code, Codex, Opus, Fable, and
-GPT model names are used only to identify locally recorded products and models.
+GPT model names identify locally recorded products and models only.

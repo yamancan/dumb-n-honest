@@ -1,29 +1,35 @@
 ---
 name: dumb-n-honest
-description: Run only when the user explicitly asks to audit local Claude Code or Codex self-corrections; keep transcript content private and return aggregate results plus a share pack.
+description: Run a private local benchmark of explicit correction acknowledgments in Claude Code and Codex history.
 license: MIT
 metadata:
-  version: "0.1.0"
+  version: "0.2.5"
 ---
 
 # Dumb n Honest
 
-Run the deterministic local audit; never inspect transcript files directly.
+Run the deterministic local audit; let the scripts read transcripts and expose only aggregates.
 
 Requires Python 3.10+ and local Claude Code or Codex history. A Chromium-family browser is optional
-for PNG export. No network access is required.
+for PNG export and may require explicit launch approval in a sandboxed agent. Runtime requires no
+package install or network access.
 
 ## Authorization gate
 
-Proceed only when the current user request explicitly asks to run this audit. If this skill was
-loaded implicitly, do not access local histories; explain how the user can invoke it and stop.
+Proceed only when the current user explicitly asks to run this audit. If loaded implicitly, do not
+access local histories; explain how to invoke the skill explicitly and stop.
 
 ## Run
 
-1. Resolve the directory containing this `SKILL.md` as `SKILL_DIR`.
-2. Choose a new or empty output directory outside the skill source repository when possible. The
-   command refuses to overwrite an earlier run.
-3. Run:
+1. Resolve the directory containing this file as `SKILL_DIR`.
+2. Choose a new or empty output directory outside the skill source repository when possible.
+3. Optionally check availability without reading transcript content:
+
+```bash
+python3 "$SKILL_DIR/scripts/doctor.py" --provider all
+```
+
+4. Run:
 
 ```bash
 python3 "$SKILL_DIR/scripts/run.py" \
@@ -32,24 +38,25 @@ python3 "$SKILL_DIR/scripts/run.py" \
   --output-dir "<new-output-directory>"
 ```
 
-Pass `--github-url` only when the user supplies one. Use `--provider claude` or `--provider codex`
-when requested. Use `--no-png` only when the user wants aggregate/HTML output or no supported local
-browser is available.
+The share pack links to the canonical benchmark repository. Pass `--github-url` only when the user
+supplies an override. Honor provider or language restrictions the user requests. PNG is best-effort;
+use `--require-png` only when the user requires it and `--no-png` when they want HTML/aggregate
+output only.
 
-4. Report the paths to `results.json`, `poster.png` or preserved `poster.html`, `tweet.txt`, and
-   `alt-text.txt`.
-5. State: this measures explicit self-corrections in visible replies, not every mistake or model
-   accuracy.
+5. Report the generated `results.json`, `poster.png` when available or preserved `poster.html`,
+`tweet.txt`, and `alt-text.txt`. State that the rate measures explicit correction acknowledgments in
+the user's observed workload, not model error rate. Explain that the share artifacts split the total
+into explicit ownership (`I was wrong`) and explicit acceptance (`You're right`). Never publish
+automatically.
 
 ## Privacy boundary
 
 The scripts are the transcript boundary. They may read local JSONL; the model may read only their
-aggregate stdout and generated aggregate files. Never print, search, quote, summarize, or attach
-prompts, replies, transcript-derived paths, session IDs, request IDs, projects, usernames, emails,
-or excerpts. The chosen aggregate output directory is the only path that may be surfaced.
+aggregate stdout and generated aggregate files. Surface only the operator-selected output path.
 
-The scripts perform no network requests and never post automatically. A generated tweet is a draft;
-leave publication to the user.
+Keep prompts, replies, transcript-derived paths, projects, session/request IDs, usernames, emails,
+handles, and excerpts outside model context and output. Keep `results.json` private; suggest sharing
+only the previewed poster, post draft, and alt text.
 
-For metric interpretation or language-pattern changes, read
-[references/measurement.md](references/measurement.md). Ordinary runs do not require loading it.
+For metric interpretation, adapters, or pattern changes, read
+[references/measurement.md](references/measurement.md). Ordinary runs do not require it.

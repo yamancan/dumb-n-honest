@@ -1,6 +1,8 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "2.0",
+  "tool": {"name": "dumb-n-honest", "version": "0.2.5", "adapter_versions": {"claude": "3", "codex": "3"}, "pattern_pack_version": "2"},
   "languages": ["en", "tr"],
+  "quality": {"shareable": true, "provider_status": {"claude": "OK", "codex": "OK"}, "valid_providers": ["claude", "codex"]},
   "providers": {
     "claude": {
       "diagnostics": {"mixed_model_turns": 2},
@@ -11,6 +13,7 @@
           "usage_share_pct": 78.43,
           "owned_error": {"count": 100, "per_100_turns": 5.0, "by_language": {"en": 20, "tr": 80}, "by_pattern": {}},
           "conceded": {"count": 60, "per_100_turns": 3.0, "by_language": {"en": 10, "tr": 50}, "by_pattern": {}},
+          "acknowledged_correction": {"count": 160, "per_100_turns": 8.0, "by_language": {"en": 30, "tr": 130}, "by_pattern": {}, "wilson_95_pct": {"low": 6.89, "high": 9.27}, "sample_status": "sample-sufficient"},
           "effort": {"high": 500, "xhigh": 1500},
           "date_range": {"first": "2026-01-01", "last": "2026-02-01"},
           "reasoning": {"observed_tokens": 200000, "tokens_in_covered_answered_turns": 160000, "covered_units": 500, "eligible_units": 2000, "covered_answered_turns": 400, "coverage_pct": 25.0, "answered_turn_coverage_pct": 20.0, "tokens_per_covered_answered_turn": 400.0}
@@ -21,6 +24,7 @@
           "usage_share_pct": 19.61,
           "owned_error": {"count": 5, "per_100_turns": 1.0, "by_language": {"tr": 5}, "by_pattern": {}},
           "conceded": {"count": 20, "per_100_turns": 4.0, "by_language": {"tr": 20}, "by_pattern": {}},
+          "acknowledged_correction": {"count": 25, "per_100_turns": 5.0, "by_language": {"tr": 25}, "by_pattern": {}, "wilson_95_pct": {"low": 3.41, "high": 7.28}, "sample_status": "sample-sufficient"},
           "effort": {"high": 500},
           "date_range": {"first": "2026-01-01", "last": "2026-02-01"},
           "reasoning": {"observed_tokens": 0, "tokens_in_covered_answered_turns": 0, "covered_units": 0, "eligible_units": 500, "covered_answered_turns": 0, "coverage_pct": 0.0, "answered_turn_coverage_pct": 0.0, "tokens_per_covered_answered_turn": null}
@@ -31,6 +35,7 @@
           "usage_share_pct": 1.96,
           "owned_error": {"count": 1, "per_100_turns": 2.0, "by_language": {"tr": 1}, "by_pattern": {}},
           "conceded": {"count": 1, "per_100_turns": 2.0, "by_language": {"tr": 1}, "by_pattern": {}},
+          "acknowledged_correction": {"count": 2, "per_100_turns": 4.0, "by_language": {"tr": 2}, "by_pattern": {}, "wilson_95_pct": {"low": 1.1, "high": 13.46}, "sample_status": "exploratory"},
           "effort": {"high": 50},
           "date_range": {"first": "2026-01-15", "last": "2026-01-20"},
           "reasoning": {"observed_tokens": 0, "tokens_in_covered_answered_turns": 0, "covered_units": 0, "eligible_units": 50, "covered_answered_turns": 0, "coverage_pct": 0.0, "answered_turn_coverage_pct": 0.0, "tokens_per_covered_answered_turn": null}
@@ -46,6 +51,7 @@
           "usage_share_pct": 76.92,
           "owned_error": {"count": 20, "per_100_turns": 2.0, "by_language": {"en": 15, "tr": 5}, "by_pattern": {}},
           "conceded": {"count": 10, "per_100_turns": 1.0, "by_language": {"en": 8, "tr": 2}, "by_pattern": {}},
+          "acknowledged_correction": {"count": 30, "per_100_turns": 3.0, "by_language": {"en": 23, "tr": 7}, "by_pattern": {}, "wilson_95_pct": {"low": 2.11, "high": 4.25}, "sample_status": "sample-sufficient"},
           "effort": {"ultra": 1000},
           "date_range": {"first": "2026-01-01", "last": "2026-02-01"},
           "reasoning": {"observed_tokens": 1000000, "tokens_in_covered_answered_turns": 1000000, "covered_units": 990, "eligible_units": 1000, "covered_answered_turns": 990, "coverage_pct": 99.0, "answered_turn_coverage_pct": 99.0, "tokens_per_covered_answered_turn": 1010.1}
@@ -56,6 +62,7 @@
           "usage_share_pct": 23.08,
           "owned_error": {"count": 3, "per_100_turns": 1.0, "by_language": {"en": 3}, "by_pattern": {}},
           "conceded": {"count": 6, "per_100_turns": 2.0, "by_language": {"en": 6}, "by_pattern": {}},
+          "acknowledged_correction": {"count": 9, "per_100_turns": 3.0, "by_language": {"en": 9}, "by_pattern": {}, "wilson_95_pct": {"low": 1.59, "high": 5.6}, "sample_status": "exploratory"},
           "effort": {"high": 300},
           "date_range": {"first": "2026-01-01", "last": "2026-02-01"},
           "reasoning": {"observed_tokens": 150000, "tokens_in_covered_answered_turns": 150000, "covered_units": 300, "eligible_units": 300, "covered_answered_turns": 300, "coverage_pct": 100.0, "answered_turn_coverage_pct": 100.0, "tokens_per_covered_answered_turn": 500.0}

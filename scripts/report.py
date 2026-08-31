@@ -4,14 +4,21 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_BENCHMARK_URL = "https://github.com/yamancan/dumb-n-honest"
+
+
+class RenderError(RuntimeError):
+    pass
 
 
 def friendly_model(provider: str, model_id: str) -> str:
@@ -36,9 +43,18 @@ def friendly_model(provider: str, model_id: str) -> str:
     return model_id
 
 
-def language_label(languages: list[str]) -> str:
-    names = {"en": "English", "tr": "Turkish"}
-    return " + ".join(names.get(language, language.upper()) for language in languages)
+def acknowledgment_for(model: dict[str, Any]) -> dict[str, Any]:
+    current = model.get("acknowledged_correction")
+    if not isinstance(current, dict):
+        raise ValueError("aggregate has no acknowledged-correction metric")
+    return current
+
+
+def correction_subtype_for(model: dict[str, Any], subtype: str) -> dict[str, Any]:
+    current = model.get(subtype)
+    if not isinstance(current, dict):
+        raise ValueError(f"aggregate has no {subtype.replace('_', '-')} metric")
+    return current
 
 
 def selected_models(result: dict[str, Any]) -> tuple[list[tuple[str, dict[str, Any]]], int]:
@@ -46,44 +62,31 @@ def selected_models(result: dict[str, Any]) -> tuple[list[tuple[str, dict[str, A
     omitted = 0
     for provider in ("claude", "codex"):
         provider_result = result.get("providers", {}).get(provider, {})
+        provider_models = []
         for model in provider_result.get("models", []):
             if model.get("answered_human_turns", 0) < 100:
                 omitted += 1
             else:
-                eligible.append((provider, model))
-    eligible.sort(key=lambda item: ((0 if item[0] == "claude" else 1), -item[1]["answered_human_turns"]))
-    if len(eligible) > 6:
-        omitted += len(eligible) - 6
-        eligible = eligible[:6]
-    return eligible, omitted
-
-
-def reasoning_label(reasoning: dict[str, Any]) -> str:
-    unit_coverage = float(reasoning.get("coverage_pct") or 0)
-    turn_coverage = float(
-        reasoning.get("answered_turn_coverage_pct")
-        if reasoning.get("answered_turn_coverage_pct") is not None
-        else unit_coverage
-    )
-    if min(unit_coverage, turn_coverage) < 95:
-        if round(unit_coverage) != round(turn_coverage):
-            return (
-                "reasoning n/a — partial coverage "
-                f"({unit_coverage:.0f}% units · {turn_coverage:.0f}% turns)"
+                provider_models.append(model)
+        provider_models.sort(key=lambda model: -int(model["answered_human_turns"]))
+        omitted += max(0, len(provider_models) - 3)
+        selected = provider_models[:3]
+        if provider == "claude":
+            selected.sort(
+                key=lambda model: (
+                    not str(model.get("model_id", "")).startswith("claude-opus-"),
+                    -int(model["answered_human_turns"]),
+                )
             )
-        return f"reasoning n/a — partial coverage ({unit_coverage:.0f}%)"
-    tokens = reasoning.get("tokens_per_covered_answered_turn")
-    if tokens is None:
-        return f"reasoning n/a · {turn_coverage:.0f}% turn coverage"
-    return f"{tokens:,.0f} reasoning tokens / covered turn · {turn_coverage:.0f}% coverage"
+        eligible.extend((provider, model) for model in selected)
+    return eligible, omitted
 
 
 def build_rows(models: list[tuple[str, dict[str, Any]]]) -> str:
     if not models:
         return '<p class="omitted">No exact model has at least 100 answered turns.</p>'
     max_signal = max(
-        float(model["owned_error"]["per_100_turns"])
-        + float(model["conceded"]["per_100_turns"])
+        100 * int(acknowledgment_for(model)["count"]) / int(model["answered_human_turns"])
         for _, model in models
     ) or 1.0
     chunks: list[str] = []
@@ -96,28 +99,36 @@ def build_rows(models: list[tuple[str, dict[str, Any]]]) -> str:
                 f'<div class="provider"><div class="provider-name">{html.escape(provider.title())}</div>'
             )
             previous_provider = provider
-        owned = float(model["owned_error"]["per_100_turns"])
-        conceded = float(model["conceded"]["per_100_turns"])
-        owned_width = 100 * owned / max_signal
-        conceded_width = 100 * conceded / max_signal
-        date_range = model.get("date_range") or {}
-        first = date_range.get("first") or "unknown"
-        last = date_range.get("last") or "unknown"
+        acknowledgment = acknowledgment_for(model)
+        rate = float(acknowledgment["per_100_turns"])
+        owned = correction_subtype_for(model, "owned_error")
+        conceded = correction_subtype_for(model, "conceded")
+        owned_rate = float(owned["per_100_turns"])
+        conceded_rate = float(conceded["per_100_turns"])
+        denominator = int(model["answered_human_turns"])
+        owned_width = 100 * (100 * int(owned["count"]) / denominator) / max_signal
+        conceded_width = 100 * (100 * int(conceded["count"]) / denominator) / max_signal
+        interval = acknowledgment.get("wilson_95_pct") or {"low": 0, "high": 0}
+        sample_status = str(acknowledgment.get("sample_status") or "exploratory")
+        sample_label = f" · {html.escape(sample_status)}" if sample_status != "sample-sufficient" else ""
         label = friendly_model(provider, str(model["model_id"]))
         chunks.append(
             '<div class="model">'
             '<div>'
             f'<div class="model-name">{html.escape(label)}</div>'
-            f'<div class="meta">N={model["answered_human_turns"]:,} · {model.get("usage_share_pct", 0):.2f}% provider usage · {html.escape(str(first))}–{html.escape(str(last))}</div>'
+            f'<div class="meta"><span class="owned-text">{owned_rate:.2f} owned</span> · '
+            f'<span class="conceded-text">{conceded_rate:.2f} conceded</span> · '
+            f'N={model["answered_human_turns"]:,} · total 95% CI '
+            f'{float(interval.get("low", 0)):.2f}–{float(interval.get("high", 0)):.2f}'
+            f'{sample_label}</div>'
             '<div class="bar">'
             f'<span class="bar-owned" style="width:{owned_width:.3f}%"></span>'
             f'<span class="bar-conceded" style="width:{conceded_width:.3f}%"></span>'
             '</div>'
-            f'<div class="reasoning">{html.escape(reasoning_label(model.get("reasoning") or {}))}</div>'
             '</div>'
             '<div>'
-            f'<div class="rate">{owned:.2f}</div>'
-            f'<div class="rate-label">owned / 100<br>{model["owned_error"]["count"]} owned · {model["conceded"]["count"]} conceded</div>'
+            f'<div class="rate">{rate:.2f}</div>'
+            '<div class="rate-label">total / 100</div>'
             '</div>'
             '</div>'
         )
@@ -125,40 +136,146 @@ def build_rows(models: list[tuple[str, dict[str, Any]]]) -> str:
     return "".join(chunks)
 
 
-def build_tweet(models: list[tuple[str, dict[str, Any]]], github_url: str | None) -> str:
+def compact_model(provider: str, model_id: str) -> str:
+    label = friendly_model(provider, model_id)
+    if provider == "claude":
+        parts = label.split()
+        return " ".join(parts[1:3]) if len(parts) >= 3 else label
+    if provider == "codex":
+        return label.replace("Codex GPT-", "Codex ", 1)
+    return label
+
+
+def social_models(models: list[tuple[str, dict[str, Any]]]) -> list[tuple[str, dict[str, Any]]]:
+    opus = [
+        item
+        for item in models
+        if item[0] == "claude" and str(item[1].get("model_id", "")).startswith("claude-opus-")
+    ][:2]
+    if not opus:
+        opus = [item for item in models if item[0] == "claude"][:2]
+    codex = [item for item in models if item[0] == "codex"][:2]
+    return opus + codex
+
+
+def build_tweet(
+    models: list[tuple[str, dict[str, Any]]],
+    github_url: str | None,
+    quarantined_turns: int = 0,
+) -> str:
+    benchmark_url = github_url or DEFAULT_BENCHMARK_URL
     if not models:
-        base = "I audited my local coding-agent history. No exact model had 100 answered turns yet."
-    else:
-        provider, model = max(
-            models, key=lambda item: float(item[1]["owned_error"]["per_100_turns"])
-        )
-        label = friendly_model(provider, str(model["model_id"]))
         base = (
-            f"{label} explicitly admitted {model['owned_error']['count']} errors in "
-            f"{model['answered_human_turns']:,} answered turns "
-            f"({model['owned_error']['per_100_turns']:.2f}/100). "
-            "This counts admissions, not all mistakes. Local audit; not a benchmark."
+            "I audited my local coding-agent history for explicit correction acknowledgments. "
+            "No exact model had 100 answered turns yet. Personal observational benchmark—not model error rate."
         )
-    if github_url:
-        candidate = f"{base} {github_url}"
-        if len(candidate) <= 280:
-            base = candidate
-    if len(base) > 280:
-        base = base[:277].rstrip() + "…"
-    return base
+    else:
+        entries = []
+        for provider, model in social_models(models):
+            owned = correction_subtype_for(model, "owned_error")
+            conceded = correction_subtype_for(model, "conceded")
+            label = compact_model(provider, str(model["model_id"]))
+            entries.append(
+                f"{label} {owned['per_100_turns']:.2f}+{conceded['per_100_turns']:.2f}"
+            )
+        suffix = (
+            f"Observational—not model error rate. {quarantined_turns} unattributed "
+            f"{'turn' if quarantined_turns == 1 else 'turns'} excluded."
+            if quarantined_turns
+            else "Observational—not model error rate."
+        )
+        base = (
+            "My correction-acknowledgment rates /100 turns (I was wrong + You’re right): "
+            + "; ".join(entries)
+            + f". {suffix}"
+        )
+    candidate = f"{base} {benchmark_url}"
+    if len(candidate) <= 280:
+        return candidate
+    available = max(0, 278 - len(benchmark_url))
+    return f"{base[:available].rstrip()}… {benchmark_url}"
 
 
-def build_alt_text(models: list[tuple[str, dict[str, Any]]], omitted: int) -> str:
+def quarantine_notes(result: dict[str, Any]) -> tuple[list[str], int]:
+    notes = []
+    total = 0
+    for provider in ("claude", "codex"):
+        diagnostics = result.get("providers", {}).get(provider, {}).get("diagnostics", {})
+        turns = int(diagnostics.get("quarantined_model_turns") or 0)
+        if not turns:
+            continue
+        share = float(diagnostics.get("quarantined_model_turn_share_pct") or 0)
+        total += turns
+        notes.append(
+            f"{provider.title()}: {turns} {'turn' if turns == 1 else 'turns'} "
+            f"excluded (unknown model, {share:.2f}%)"
+        )
+    return notes, total
+
+
+def quality_failure_summary(result: dict[str, Any]) -> str:
+    summaries = []
+    statuses = (result.get("quality") or {}).get("provider_status") or {}
+    for provider in ("claude", "codex"):
+        status = statuses.get(provider)
+        if not status or status in ("OK", "OK_WITH_WARNINGS"):
+            continue
+        diagnostics = result.get("providers", {}).get(provider, {}).get("diagnostics", {})
+        counters = []
+        for key in (
+            "malformed_records",
+            "file_errors",
+            "files_vanished",
+            "invalid_model_ids",
+            "invalid_effort_values",
+            "quarantined_model_turns",
+        ):
+            value = int(diagnostics.get(key) or 0)
+            if value:
+                counters.append(f"{key}={value}")
+        if diagnostics.get("turn_reconciliation_ok") is False:
+            counters.append("turn_reconciliation_ok=false")
+        detail = f" ({', '.join(counters)})" if counters else ""
+        summaries.append(f"{provider}={status}{detail}")
+    return "; ".join(summaries) or "quality status unavailable"
+
+
+def build_alt_text(
+    models: list[tuple[str, dict[str, Any]]],
+    omitted: int,
+    quality_notes: list[str] | None = None,
+    benchmark_url: str = DEFAULT_BENCHMARK_URL,
+) -> str:
+    if not models:
+        return "No model had at least 100 answered turns; no comparison bars are shown."
     rows = []
     for provider, model in models:
+        acknowledgment = acknowledgment_for(model)
+        owned = correction_subtype_for(model, "owned_error")
+        conceded = correction_subtype_for(model, "conceded")
+        interval = acknowledgment["wilson_95_pct"]
         rows.append(
             f"{friendly_model(provider, str(model['model_id']))}: "
-            f"{model['owned_error']['per_100_turns']:.2f} owned errors per 100 turns "
-            f"({model['owned_error']['count']} of {model['answered_human_turns']}), "
-            f"plus {model['conceded']['count']} concessions."
+            f"{owned['per_100_turns']:.2f} owned and {conceded['per_100_turns']:.2f} conceded "
+            f"per 100 turns; total {acknowledgment['per_100_turns']:.2f} "
+            f"({acknowledgment['count']} of {model['answered_human_turns']}; "
+            f"total 95% CI {interval['low']:.2f} to {interval['high']:.2f})."
         )
-    suffix = f" {omitted} low-sample or overflow model omitted." if omitted else ""
-    text = "Bar chart grouped by provider. " + " ".join(rows) + suffix
+    suffix = (
+        f" {omitted} low-sample or overflow "
+        f"{'model' if omitted == 1 else 'models'} omitted."
+        if omitted
+        else ""
+    )
+    quality_suffix = f" Data quality: {'; '.join(quality_notes)}." if quality_notes else ""
+    text = (
+        "Stacked bar chart grouped by provider. Black means explicit ownership such as "
+        "I was wrong; orange means explicit acceptance such as You're right. "
+        + " ".join(rows)
+        + suffix
+        + quality_suffix
+        + f" Benchmark: {benchmark_url}."
+    )
     return text[:1000]
 
 
@@ -171,12 +288,22 @@ def write_private(path: Path, content: str) -> None:
 
 
 def find_browser() -> Path | None:
-    fixed_candidates = (
+    fixed_candidates = [
         Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
         Path("/Applications/Chromium.app/Contents/MacOS/Chromium"),
         Path("/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"),
         Path("/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"),
-    )
+    ]
+    for variable in ("PROGRAMFILES", "PROGRAMFILES(X86)", "LOCALAPPDATA"):
+        base = os.environ.get(variable)
+        if base:
+            fixed_candidates.extend(
+                [
+                    Path(base) / "Google/Chrome/Application/chrome.exe",
+                    Path(base) / "Microsoft/Edge/Application/msedge.exe",
+                    Path(base) / "BraveSoftware/Brave-Browser/Application/brave.exe",
+                ]
+            )
     for candidate in fixed_candidates:
         if candidate.is_file():
             return candidate
@@ -186,7 +313,12 @@ def find_browser() -> Path | None:
         "chromium",
         "chromium-browser",
         "microsoft-edge",
+        "msedge",
+        "msedge.exe",
+        "chrome",
+        "chrome.exe",
         "brave-browser",
+        "brave.exe",
     ):
         resolved = shutil.which(command)
         if resolved:
@@ -197,7 +329,7 @@ def find_browser() -> Path | None:
 def render_png(poster_html: Path, output: Path) -> None:
     browser = find_browser()
     if browser is None:
-        raise SystemExit(
+        raise RenderError(
             "PNG rendering requires an installed Chrome, Chromium, Edge, or Brave browser; "
             "poster.html was preserved."
         )
@@ -232,9 +364,9 @@ def render_png(poster_html: Path, output: Path) -> None:
                 measured_stdout = measured_stdout.decode("utf-8", errors="replace")
             measured_ok = "<html" in measured_stdout.casefold()
         if not measured_ok:
-            raise SystemExit("Local browser could not measure poster.html; the HTML was preserved.")
+            raise RenderError("Local browser could not measure poster.html; the HTML was preserved.")
         if 'data-overflow="true"' in measured_stdout:
-            raise SystemExit("Poster content exceeds 1080x1350; the HTML was preserved without PNG.")
+            raise RenderError("Poster content exceeds 1080x1350; the HTML was preserved without PNG.")
         try:
             rendered = subprocess.run(
                 [
@@ -253,7 +385,7 @@ def render_png(poster_html: Path, output: Path) -> None:
         except subprocess.TimeoutExpired:
             rendered_ok = output.is_file()
         if not rendered_ok or not output.is_file():
-            raise SystemExit("Local browser could not render poster.png; poster.html was preserved.")
+            raise RenderError("Local browser could not render poster.png; poster.html was preserved.")
     try:
         output.chmod(0o600)
     except OSError:
@@ -264,26 +396,43 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Render aggregate dumb-n-honest results.")
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--github-url")
+    parser.add_argument(
+        "--github-url",
+        help=f"Override the benchmark link (default: {DEFAULT_BENCHMARK_URL}).",
+    )
     parser.add_argument("--no-png", action="store_true")
+    parser.add_argument("--require-png", action="store_true")
     args = parser.parse_args()
 
+    if args.no_png and args.require_png:
+        parser.error("--no-png and --require-png cannot be combined")
+
     result = json.loads(args.input.read_text(encoding="utf-8"))
+    quality = result.get("quality") or {}
+    if result.get("schema_version") != "2.0" or quality.get("shareable") is not True:
+        raise SystemExit(
+            f"Aggregate quality checks failed: {quality_failure_summary(result)}. "
+            "No share pack was generated."
+        )
     models, omitted = selected_models(result)
+    quality_notes, quarantined_turns = quarantine_notes(result)
+    benchmark_url = args.github_url or DEFAULT_BENCHMARK_URL
     template = (SKILL_ROOT / "assets" / "poster.html").read_text(encoding="utf-8")
     omitted_text = (
-        f'<p class="omitted">{omitted} low-sample model omitted from the poster; retained in results.json.</p>'
-        if omitted == 1
-        else (
-            f'<p class="omitted">{omitted} low-sample or overflow models omitted from the poster; retained in results.json.</p>'
-            if omitted
-            else ""
-        )
+        f'<p class="omitted">{omitted} additional low-sample '
+        f'{"model" if omitted == 1 else "models"} omitted.</p>'
+        if omitted
+        else ""
+    )
+    quality_text = (
+        f'<p class="omitted">Data quality — {html.escape("; ".join(quality_notes))}.</p>'
+        if quality_notes
+        else ""
     )
     poster = (
-        template.replace("@@LANGUAGES@@", html.escape(language_label(result.get("languages", []))))
+        template.replace("@@BENCHMARK_URL@@", html.escape(benchmark_url))
         .replace("@@ROWS@@", build_rows(models))
-        .replace("@@OMITTED@@", omitted_text)
+        .replace("@@OMITTED@@", omitted_text + quality_text)
     )
 
     if args.output_dir.is_symlink():
@@ -305,13 +454,24 @@ def main() -> None:
     if any(path.exists() or path.is_symlink() for path in targets):
         raise SystemExit("Share-pack output already exists; no files were overwritten.")
     write_private(args.output_dir / "poster.html", poster)
-    write_private(args.output_dir / "tweet.txt", build_tweet(models, args.github_url) + "\n")
-    write_private(args.output_dir / "alt-text.txt", build_alt_text(models, omitted) + "\n")
+    write_private(
+        args.output_dir / "tweet.txt",
+        build_tweet(models, benchmark_url, quarantined_turns) + "\n",
+    )
+    write_private(
+        args.output_dir / "alt-text.txt",
+        build_alt_text(models, omitted, quality_notes, benchmark_url) + "\n",
+    )
 
     if not args.no_png:
-        render_png(args.output_dir / "poster.html", args.output_dir / "poster.png")
+        try:
+            render_png(args.output_dir / "poster.html", args.output_dir / "poster.png")
+        except RenderError as error:
+            if args.require_png:
+                raise SystemExit(str(error)) from None
+            print(f"warning: {error}", file=sys.stderr)
     print(args.output_dir / "poster.html")
-    if not args.no_png:
+    if (args.output_dir / "poster.png").is_file():
         print(args.output_dir / "poster.png")
     print(args.output_dir / "tweet.txt")
     print(args.output_dir / "alt-text.txt")

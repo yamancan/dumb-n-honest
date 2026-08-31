@@ -17,7 +17,13 @@ class PatternPackTests(unittest.TestCase):
             definition = json.loads(path.read_text(encoding="utf-8"))
             language = definition["language"]
             self.assertEqual(path.stem, language)
-            for category in ("owned_error", "conceded", "exclude"):
+            for category in (
+                "owned_error",
+                "conceded",
+                "soft_concession",
+                "global_exclude",
+                "exclude",
+            ):
                 for pattern in definition[category]:
                     with self.subTest(pattern=pattern["id"]):
                         self.assertTrue(pattern["id"].startswith(f"{language}."))
@@ -36,17 +42,18 @@ class PatternPackTests(unittest.TestCase):
         patterns = load_patterns(["en", "tr"])
         for path in sorted((ROOT / "patterns").glob("*.json")):
             definition = json.loads(path.read_text(encoding="utf-8"))
-            for category in ("owned_error", "conceded"):
+            for category in ("owned_error", "conceded", "soft_concession"):
                 for pattern in definition[category]:
                     for example in pattern["examples"]["match"]:
                         with self.subTest(pattern=pattern["id"], example=example):
                             event = classify(example, patterns)
                             self.assertIsNotNone(event)
                             self.assertEqual(event[0], category)
-            for pattern in definition["exclude"]:
-                for example in pattern["examples"]["match"]:
-                    with self.subTest(pattern=pattern["id"], example=example):
-                        self.assertIsNone(classify(example, patterns))
+            for category in ("global_exclude", "exclude"):
+                for pattern in definition[category]:
+                    for example in pattern["examples"]["match"]:
+                        with self.subTest(pattern=pattern["id"], example=example):
+                            self.assertIsNone(classify(example, patterns))
 
     def test_turkish_patterns_accept_diacritic_and_ascii_spellings(self) -> None:
         patterns = load_patterns(["tr"])
@@ -57,6 +64,8 @@ class PatternPackTests(unittest.TestCase):
             ("Haklısın.", "Haklisin.", "conceded"),
             ("Doğru söylüyorsun.", "Dogru soyluyorsun.", "conceded"),
             ("Uyarın yerinde.", "Uyarin yerinde.", "conceded"),
+            ("Yanlış anlamışım.", "Yanlis anlamisim.", "owned_error"),
+            ("Hata bendeymiş.", "Hata bendeymis.", "owned_error"),
         )
         for diacritic, ascii_text, category in pairs:
             with self.subTest(text=diacritic):
@@ -72,10 +81,29 @@ class PatternPackTests(unittest.TestCase):
             "Hatalıydım sanmıştım ama değilmişim.",
             "Yanlış yaptım mı?",
             "Haklısın?",
+            "You're right. Actually no, you aren't.",
+            "Haklısın. Aslında hayır, değilsin.",
+            "Kahveyi karıştırdım.",
+            "Duvarın üzerinden atladım.",
+            "I fabricated test data intentionally.",
+            "I missed the deadline.",
+            "You deleted the file. That was a mistake.",
+            "You are right to be cautious.",
+            "I was wrong—actually, I wasn't.",
+            "The correct phrasing is: I was wrong.",
+            "Bunu düzelteyim; yazımı daha temiz olsun.",
         )
         for text in near_misses:
             with self.subTest(text=text):
                 self.assertIsNone(classify(text, patterns))
+
+    def test_retracted_concession_does_not_hide_a_separate_owned_error(self) -> None:
+        patterns = load_patterns(["en"])
+        event = classify(
+            "You're right. Actually no, you aren't. But I was wrong about the date.",
+            patterns,
+        )
+        self.assertEqual(event, ("owned_error", "en.owned.i_was_wrong"))
 
 
 if __name__ == "__main__":

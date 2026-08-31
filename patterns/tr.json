@@ -18,8 +18,8 @@
     },
     {
       "id": "tr.owned.hata_bende",
-      "regex": "\\bhata bende(?:ydi)?\\b(?!\\s+(?:değil|yok))",
-      "examples": {"match": ["Hata bendeydi."], "non_match": ["Hata bende değil."]}
+      "regex": "\\bhata bende(?:ydi|ymiş)?\\b(?!\\s+(?:değil|yok))",
+      "examples": {"match": ["Hata bendeydi.", "Hata bendeymiş."], "non_match": ["Hata bende değil."]}
     },
     {
       "id": "tr.owned.mistake",
@@ -28,8 +28,8 @@
     },
     {
       "id": "tr.owned.yanlis_action",
-      "regex": "\\byanlış\\b[^.!?\\n]{0,60}\\b(?:anladım|okudum|yorumladım|hatırladım|hesapladım|aktardım|ifade ettim|söyledim|belirttim|varsaydım|uyguladım|yaptım|seçtim|kullandım|bilgi verdim|yönlendirdim)\\b",
-      "examples": {"match": ["Dosya yolunu yanlış okudum.", "Seni yanlis yonlendirdim."], "non_match": ["Yanlış dosya okundu."]}
+      "regex": "\\byanlış\\b[^.!?\\n]{0,60}\\b(?:anladım|anlamışım|okudum|yorumladım|hatırladım|hesapladım|aktardım|ifade ettim|söyledim|söylemişim|belirttim|varsaydım|uyguladım|yaptım|seçtim|kullandım|bilgi verdim|yönlendirdim)\\b",
+      "examples": {"match": ["Dosya yolunu yanlış okudum.", "Yanlış anlamışım.", "Yanlış söylemişim."], "non_match": ["Yanlış dosya okundu."]}
     },
     {
       "id": "tr.owned.gozden_kacirdim",
@@ -38,8 +38,8 @@
     },
     {
       "id": "tr.owned.karistirdim",
-      "regex": "\\b[^.!?\\n]{0,60}(?:birbirine )?karıştırdım\\b",
-      "examples": {"match": ["İki modeli birbirine karıştırdım."], "non_match": ["Modeller karıştırıldı."]}
+      "regex": "\\b(?:iki|bu iki|bunları|onları|modelleri|dosyaları|değerleri|kavramları)\\b[^.!?\\n]{0,60}(?:birbirine )?karıştırdım\\b",
+      "examples": {"match": ["İki modeli birbirine karıştırdım."], "non_match": ["Kahveyi karıştırdım."]}
     },
     {
       "id": "tr.owned.previous_wrong",
@@ -48,8 +48,8 @@
     },
     {
       "id": "tr.owned.correct_previous",
-      "regex": "\\b(?:(?:önceki |ilk |bu )?(?:cevabımı|yanıtımı|söylediğimi|ifadeyi|bunu|şunu) düzeltmem gerek(?:iyor)?|(?:bunu|şunu|önceki cevabımı|yanıtımı) düzelteyim)\\b",
-      "examples": {"match": ["Bunu düzelteyim."], "non_match": ["Cevabı düzelt."]}
+      "regex": "\\b(?:(?:önceki |ilk )?(?:cevabımı|yanıtımı|söylediğimi) düzeltmem gerek(?:iyor)?|(?:önceki cevabımı|önceki yanıtımı|cevabımı|yanıtımı) düzelteyim)\\b",
+      "examples": {"match": ["Önceki cevabımı düzelteyim."], "non_match": ["Cevabı düzelt.", "Bunu düzelteyim; yazımı daha temiz olsun."]}
     },
     {
       "id": "tr.owned.take_back",
@@ -58,8 +58,8 @@
     },
     {
       "id": "tr.owned.atladim",
-      "regex": "\\b(?:bunu |şunu |onu |o kısmı |bu kısmı )?(?:atladım|atlamışım)\\b",
-      "examples": {"match": ["O kısmı atlamışım."], "non_match": ["Bu kısım atlandı."]}
+      "regex": "\\b(?:bunu|şunu|onu|o kısmı|bu kısmı|bu adımı|o adımı) (?:atladım|atlamışım)\\b",
+      "examples": {"match": ["O kısmı atlamışım."], "non_match": ["Duvarın üzerinden atladım."]}
     },
     {
       "id": "tr.owned.fabricated",
@@ -79,11 +79,6 @@
       "examples": {"match": ["Doğru söylüyorsun."], "non_match": ["Doğru söylüyor."]}
     },
     {
-      "id": "tr.conceded.catch",
-      "regex": "\\b(?:(?:çok )?(?:iyi|güzel) )?(?:yakaladın|yakaladınız|fark ettin|fark ettiniz)\\b",
-      "examples": {"match": ["İyi yakaladın."], "non_match": ["Hatayı yakaladı."]}
-    },
-    {
       "id": "tr.conceded.uyari_yerinde",
       "regex": "\\b(?:(?:uyarın|tespitin|düzeltmen) yerinde|yerinde bir (?:uyarı|tespit|düzeltme))\\b",
       "examples": {"match": ["Uyarın yerinde."], "non_match": ["Yeni bir uyarı geldi."]}
@@ -97,6 +92,20 @@
       "id": "tr.conceded.dedigin_dogru",
       "regex": "\\b(?:(?:senin )?dediğin doğru|doğru dedin)\\b",
       "examples": {"match": ["Dediğin doğru.", "Dogru dedin."], "non_match": ["Doğru değeri yazdın."]}
+    }
+  ],
+  "soft_concession": [
+    {
+      "id": "tr.soft.catch",
+      "regex": "\\b(?:(?:çok )?(?:iyi|güzel) )?(?:yakaladın|yakaladınız|fark ettin|fark ettiniz)\\b",
+      "examples": {"match": ["İyi yakaladın."], "non_match": ["Hatayı yakaladı."]}
+    }
+  ],
+  "global_exclude": [
+    {
+      "id": "tr.global.retracted_concession",
+      "regex": "\\b(?:haklısın|haklısınız|dediğin doğru)\\b[.!?\\s]{1,20}(?:aslında|düzeltme)[^.!?\\n]{0,80}\\b(?:değilsin|değilsiniz|değil)\\b",
+      "examples": {"match": ["Haklısın. Aslında hayır, değilsin."], "non_match": ["Haklısın. Ben yanıldım."]}
     }
   ],
   "exclude": [
