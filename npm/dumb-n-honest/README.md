@@ -4,8 +4,8 @@ Run the [dumb-n-honest](https://github.com/yamancan/dumb-n-honest) private local
 one command:
 
 ```bash
-npx dumbandhonest doctor
-npx dumbandhonest run --output-dir ./my-audit --no-png
+npx dumb-n-honest doctor
+npx dumb-n-honest run --output-dir ./my-audit --no-png
 ```
 
 This package is a thin, dependency-free launcher. It:

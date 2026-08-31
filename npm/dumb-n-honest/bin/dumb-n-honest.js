@@ -16,7 +16,7 @@ const PACKAGE_FILE = (version) => `dumb-n-honest-v${version}.skill`;
 
 const version = process.env.DUMB_N_HONEST_VERSION || DEFAULT_VERSION;
 const baseUrl = (process.env.DUMB_N_HONEST_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, "");
-const installRoot = join(homedir(), ".dumbandhonest", "versions", version);
+const installRoot = join(homedir(), ".dumb-n-honest", "versions", version);
 const packagePath = join(installRoot, PACKAGE_FILE(version));
 const skillRoot = join(installRoot, "dumb-n-honest");
 const markerPath = join(installRoot, ".verified");
@@ -96,11 +96,11 @@ async function ensureInstalled(python) {
 }
 
 function usage() {
-  process.stdout.write(`dumbandhonest — private local correction-acknowledgment benchmark
+  process.stdout.write(`dumb-n-honest — private local correction-acknowledgment benchmark
 
 Usage:
-  dumbandhonest doctor [--provider all|claude|codex]
-  dumbandhonest run --output-dir <new-dir> [--provider all|claude|codex] [--languages en,tr] [--no-png] [--require-png] [--github-url <url>]
+  dumb-n-honest doctor [--provider all|claude|codex]
+  dumb-n-honest run --output-dir <new-dir> [--provider all|claude|codex] [--languages en,tr] [--no-png] [--require-png] [--github-url <url>]
 
 Requires Python 3.10+ and local Claude Code or Codex history.
 Downloads the official dumb-n-honest release, verifies its SHA256, and runs it locally.

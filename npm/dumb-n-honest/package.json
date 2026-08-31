@@ -13,7 +13,7 @@
     "node": ">=18"
   },
   "bin": {
-    "dumb-n-honest": "bin/dumbandhonest.js"
+    "dumb-n-honest": "bin/dumb-n-honest.js"
   },
   "files": [
     "bin",
