@@ -17,6 +17,8 @@ jobs:
         with:
           python-version: "3.10"
       - run: python -m unittest discover -s tests -v
+        env:
+          PYTHONUTF8: 1
       - run: npm test --prefix npm/dumb-n-honest
       - run: python scripts/package.py --check-tag "$GITHUB_REF_NAME"
       - run: sha256sum dist/*.skill > dist/SHA256SUMS

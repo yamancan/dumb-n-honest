@@ -15,6 +15,17 @@ PROVIDER_BADGE = {"claude": "🤖", "codex": "🧮"}
 PROVIDER_LABEL = {"claude": "Claude Code", "codex": "Codex"}
 
 
+def force_utf8_output() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
+
+force_utf8_output()
+
+
 def friendly_summary(results_path: Path, output_dir: Path) -> str | None:
     result = json.loads(results_path.read_text(encoding="utf-8"))
     headline = []
@@ -111,6 +122,8 @@ def main() -> None:
         cwd=SKILL_ROOT,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
     if scan.returncode != 0:
@@ -136,6 +149,8 @@ def main() -> None:
         cwd=SKILL_ROOT,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
     if report.returncode != 0:

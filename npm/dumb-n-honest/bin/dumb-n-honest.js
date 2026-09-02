@@ -23,7 +23,7 @@ const PINNED_SHA256 = {
   "0.2.6": "4d4206c18d39571c5b34f8a20f432ed560d11db6f4f38ad1a51be277fe1d70bd",
   "0.2.7": "fb2bb3279da8bfa846eb34b3a9483d200f87bf208c4a36d1e4e104c6f679c270",
   "0.2.8": "7985b0c3c3b35d6d64fc36fc09190ab7c7f08e72fdf04dd33ab940446f0dc95a",
-  "0.2.9": "fd87c337a6df34eb36c282f1da7cad306932c4a967616dc96ae8e7b507285e71",
+  "0.2.9": "cb7602e2f9057ae11fbc14f81e1d1847c5d8c95bb368e27e69938826583d34e6",
 };
 const DEFAULT_BASE_URL = "https://github.com/yamancan/dumb-n-honest/releases/download";
 const MAX_PACKAGE_BYTES = 10 * 1024 * 1024;

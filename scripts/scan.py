@@ -5,9 +5,21 @@ import argparse
 import json
 import math
 import re
+import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
+
+
+def force_utf8_output() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
+
+force_utf8_output()
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
