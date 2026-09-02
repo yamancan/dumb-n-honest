@@ -170,16 +170,18 @@ def build_tweet(
     total_answered_turns: int | None = None,
 ) -> str:
     benchmark_url = github_url or DEFAULT_BENCHMARK_URL
+    cta = "▶ Run yours locally: npx dumb-n-honest"
     if not models:
         base = (
-            "I audited my local coding-agent history for explicit correction acknowledgments. "
-            "No exact model had 100 answered turns yet. Personal workload, not error rate."
+            "🤖 I audited my local coding-agent history for explicit correction acknowledgments. "
+            "No exact model had 100 answered turns yet. "
+            "⚠️ Personal workload, not error rate."
         )
-        candidate = f"{base}\n\n{benchmark_url}"
+        candidate = f"{base}\n\n{cta}\n\n{benchmark_url}"
         if len(candidate) <= 280:
             return candidate
-        available = max(0, 278 - len(benchmark_url))
-        return f"{base[:available].rstrip()}…\n\n{benchmark_url}"
+        available = max(0, 278 - len(cta) - len(benchmark_url))
+        return f"{base[:available].rstrip()}…\n\n{cta}\n\n{benchmark_url}"
 
     featured = social_models(models)
     providers = {provider for provider, _ in featured}
@@ -194,13 +196,10 @@ def build_tweet(
     for provider, model in featured:
         acknowledgment = acknowledgment_for(model)
         entries.append(
-            f"{compact_model(provider, str(model['model_id']))}: "
+            f"{compact_model(provider, str(model['model_id']))} · "
             f"{float(acknowledgment['per_100_turns']):.2f}"
         )
-    result_lines = "\n".join(
-        f"{entry} correction acknowledgments per 100 turns" if index == 0 else entry
-        for index, entry in enumerate(entries)
-    )
+    result_lines = "\n".join(entries)
     disclosure = (
         f" {quarantined_turns} unattributed "
         f"{'turn was' if quarantined_turns == 1 else 'turns were'} excluded."
@@ -209,31 +208,36 @@ def build_tweet(
     )
     candidates = [
         (
-            "I kept noticing coding agents say “you’re right,” so I audited "
-            f"{turns:,} answered turns from my {history} history.\n\n"
+            f"🤖 I counted “you're right” across {turns:,} turns of {history} history.\n\n"
             f"{result_lines}\n\n"
+            f"🖤 owned + 🟠 conceded: correction acknowledgments /100 turns. "
             f"⚠️ Personal workload, not error rate.{disclosure}\n\n"
+            f"{cta}\n\n"
             f"{benchmark_url}"
         ),
         (
-            f"I audited {turns:,} answered turns from my {history} history for explicit "
-            "correction acknowledgments.\n\n"
+            f"🤖 I counted “you're right” across {turns:,} turns.\n\n"
             f"{result_lines}\n\n"
+            f"🖤 owned + 🟠 conceded, per 100 turns. "
             f"⚠️ Personal workload, not error rate.{disclosure}\n\n"
+            f"{cta}\n\n"
             f"{benchmark_url}"
         ),
         (
-            f"I audited {turns:,} answered turns from my {history} history. "
-            f"⚠️ Personal workload, not error rate.{disclosure}\n\n"
+            f"🤖 How often does a coding agent admit being wrong?\n\n"
+            f"{result_lines}\n\n"
+            f"🖤 owned + 🟠 conceded, per 100 turns. "
+            f"⚠️ Personal, not error rate.{disclosure}\n\n"
+            f"{cta}\n\n"
             f"{benchmark_url}"
         ),
     ]
     for candidate in candidates:
         if len(candidate) <= 280:
             return candidate
-    available = max(0, 278 - len(benchmark_url))
+    available = max(0, 278 - len(cta) - len(benchmark_url))
     base = candidates[-1].rsplit("\n\n", 1)[0]
-    return f"{base[:available].rstrip()}…\n\n{benchmark_url}"
+    return f"{base[:available].rstrip()}…\n\n{cta}\n\n{benchmark_url}"
 
 
 def quarantine_notes(result: dict[str, Any]) -> tuple[list[str], int]:

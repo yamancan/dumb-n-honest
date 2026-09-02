@@ -180,7 +180,9 @@ ownership such as `I was wrong` and orange for explicit acceptance such as `You'
 number at right is their deduplicated total per 100 turns. The row also shows the subtype rates,
 denominator, total confidence interval, and sample status. The post pairs a short personal hook with
 the total observed workload and one readable result per provider without declaring the highest total
-a winner. Both include the benchmark link. Nothing is published automatically.
+a winner, adds an emoji legend (black heart for owned, orange circle for conceded) that matches the
+poster colors, and closes with a `npx dumb-n-honest` run-locally call to action. Both include the
+benchmark link. Nothing is published automatically.
 
 ## Measurement contract
 

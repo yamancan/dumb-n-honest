@@ -11,7 +11,7 @@ from typing import Any
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
-TOOL_VERSION = "0.2.7"
+TOOL_VERSION = "0.2.8"
 SCHEMA_VERSION = "2.0"
 ADAPTER_VERSIONS = {"claude": "3", "codex": "3"}
 MAX_QUARANTINED_MODEL_TURN_SHARE_PCT = 1.0
