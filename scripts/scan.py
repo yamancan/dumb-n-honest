@@ -11,7 +11,7 @@ from typing import Any
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
-TOOL_VERSION = "0.2.8"
+TOOL_VERSION = "0.2.9"
 SCHEMA_VERSION = "2.0"
 ADAPTER_VERSIONS = {"claude": "3", "codex": "3"}
 MAX_QUARANTINED_MODEL_TURN_SHARE_PCT = 1.0
@@ -876,26 +876,33 @@ def main() -> None:
         args.output.chmod(0o600)
     except OSError:
         parser.error("aggregate output could not be written")
-    print(
-        "provider\tmodel\tturns\tturn_share_pct\tacknowledged\tack_per_100\t"
-        "ci95_low\tci95_high\tsample_status\towned\tconceded\tsoft_concession\t"
-        "reasoning_unit_coverage_pct\t"
-        "reasoning_turn_coverage_pct"
+    print("Model comparison — correction acknowledgments per 100 turns")
+    print("  🖤 owned error · 🟠 conceded · status: ✅ sufficient 🟡 limited 🟠 exploratory")
+    header = (
+        f"{'provider':<9}{'model':<20}{'turns':>6}  {'share%':>6}  "
+        f"{'ack/100':>8}  {'95% CI':>13}  {'status':<20}{'owned':>6}{'conceded':>9}"
     )
+    print(header)
+    print("-" * len(header))
+    provider_badge = {"claude": "🤖", "codex": "🧮"}
     for provider, provider_result in result["providers"].items():
+        badge = provider_badge.get(provider, "❔")
         for model in provider_result["models"]:
+            ack = model["acknowledged_correction"]
+            interval = ack["wilson_95_pct"]
+            status = str(ack["sample_status"])
+            status_icon = {
+                "sample-sufficient": "✅",
+                "sample-limited": "🟡",
+                "exploratory": "🟠",
+            }.get(status, "")
             print(
-                f"{provider}\t{model['model_id']}\t{model['answered_human_turns']}\t"
-                f"{model['answered_turn_share_pct']:.2f}\t"
-                f"{model['acknowledged_correction']['count']}\t"
-                f"{model['acknowledged_correction']['per_100_turns']:.2f}\t"
-                f"{model['acknowledged_correction']['wilson_95_pct']['low']:.2f}\t"
-                f"{model['acknowledged_correction']['wilson_95_pct']['high']:.2f}\t"
-                f"{model['acknowledged_correction']['sample_status']}\t"
-                f"{model['owned_error']['count']}\t{model['conceded']['count']}\t"
-                f"{model['soft_concession']['count']}\t"
-                f"{model['reasoning']['coverage_pct']:.2f}\t"
-                f"{model['reasoning']['answered_turn_coverage_pct']:.2f}"
+                f"{badge:<8}{model['model_id']:<20}{model['answered_human_turns']:>6}  "
+                f"{model['answered_turn_share_pct']:>6.2f}  "
+                f"{float(ack['per_100_turns']):>8.2f}  "
+                f"{float(interval['low']):>6.2f}–{float(interval['high']):<6.2f}  "
+                f"{status_icon} {status:<18}{model['owned_error']['count']:>6}"
+                f"{model['conceded']['count']:>9}"
             )
 
 

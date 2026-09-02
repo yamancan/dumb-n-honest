@@ -3,7 +3,7 @@ name: dumb-n-honest
 description: Run a private local benchmark of explicit correction acknowledgments in Claude Code and Codex history.
 license: MIT
 metadata:
-  version: "0.2.8"
+  version: "0.2.9"
 ---
 
 # Dumb n Honest

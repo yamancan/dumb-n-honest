@@ -2,12 +2,60 @@
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
+
+PROVIDER_BADGE = {"claude": "🤖", "codex": "🧮"}
+PROVIDER_LABEL = {"claude": "Claude Code", "codex": "Codex"}
+
+
+def friendly_summary(results_path: Path, output_dir: Path) -> str | None:
+    result = json.loads(results_path.read_text(encoding="utf-8"))
+    headline = []
+    total_turns = 0
+    for provider in ("claude", "codex"):
+        provider_result = result.get("providers", {}).get(provider, {})
+        best = None
+        for model in provider_result.get("models", []):
+            total_turns += int(model.get("answered_human_turns") or 0)
+            ack = model.get("acknowledged_correction") or {}
+            rate = float(ack.get("per_100_turns") or 0)
+            if best is None or rate > best[1]:
+                best = (model.get("model_id", ""), rate, ack.get("sample_status", ""))
+        if best:
+            display = str(best[0])
+            if provider == "claude" and display.startswith("claude-"):
+                display = display.removeprefix("claude-").replace("-", " ").title()
+            elif provider == "codex" and display.startswith("gpt-"):
+                display = "GPT-" + display[4:].replace("-", " ").title()
+            headline.append(f"{PROVIDER_BADGE[provider]} {display}: {best[1]:.2f}/100 {best[2]}")
+    if not headline:
+        return None
+    lines = [
+        "✅ Audit complete — here's your summary!",
+        "Correction acknowledgments per 100 turns:",
+        *headline,
+        "",
+        "🖤 “I was wrong” (owned) + 🟠 “You're right” (conceded).",
+        "⚠️ Your personal workload, not a model error rate.",
+    ]
+    for label, filename in (
+        ("Post for Twitter/X", "tweet.txt"),
+        ("Image with the chart", "poster.png"),
+        ("Chart description (alt text)", "alt-text.txt"),
+        ("Full private results", "results.json"),
+    ):
+        path = output_dir / filename
+        if path.is_file():
+            lines.append(f"📄 {label}: {path}")
+    lines.append("▶ Share these from the folder above, or run it on your own machine with: npx dumb-n-honest")
+    return "\n".join(lines)
 
 
 def prepare_output_directory(path: Path) -> None:
@@ -99,6 +147,11 @@ def main() -> None:
     print(report.stdout, end="")
     if report.stderr:
         print(report.stderr, end="", file=sys.stderr)
+
+    summary = friendly_summary(results, args.output_dir)
+    if summary:
+        print("\n" + summary, end="", file=sys.stderr)
+        print(file=sys.stderr)
 
 
 if __name__ == "__main__":
