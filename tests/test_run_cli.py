@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class RunCliTests(unittest.TestCase):
-    def test_one_command_scans_and_writes_the_share_pack(self) -> None:
+    def test_one_command_scans_and_writes_one_workspace(self) -> None:
         fixture_root = ROOT / "tests" / "fixtures" / "claude_owned_tr"
         with tempfile.TemporaryDirectory() as output_dir:
             completed = subprocess.run(
@@ -37,12 +37,10 @@ class RunCliTests(unittest.TestCase):
             self.assertEqual(completed.returncode, 0, completed.stderr)
             output = Path(output_dir)
             self.assertTrue((output / "results.json").is_file())
-            self.assertTrue((output / "poster.html").is_file())
-            self.assertTrue((output / "tweet.txt").is_file())
-            self.assertTrue((output / "alt-text.txt").is_file())
+            self.assertEqual({path.name for path in output.iterdir()}, {"results.json", "report.html"})
             self.assertIn(
-                "correction acknowledgments",
-                (output / "tweet.txt").read_text(encoding="utf-8"),
+                "Correction acknowledgments",
+                (output / "report.html").read_text(encoding="utf-8"),
             )
             result = json.loads((output / "results.json").read_text(encoding="utf-8"))
 
@@ -84,7 +82,7 @@ class RunCliTests(unittest.TestCase):
 
             self.assertNotEqual(completed.returncode, 0)
             self.assertTrue((output / "results.json").is_file())
-            self.assertFalse((output / "poster.html").exists())
+            self.assertFalse((output / "report.html").exists())
             self.assertIn("Scanning local history", completed.stderr)
             self.assertIn("Scan complete", completed.stderr)
             self.assertIn("malformed_records=1", completed.stderr)

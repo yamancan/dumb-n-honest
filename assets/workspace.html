@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Dumb n Honest — Your local audit</title>
+  <style>
+    :root { color-scheme:light; --ink:#111; --muted:#676767; --line:#d8d5ce; --paper:#f6f4ef; --owned:#111; --conceded:#c4512d; --font:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; }
+    * { box-sizing:border-box; }
+    [hidden] { display:none!important; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.5 var(--font); -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums; }
+    a { color:inherit; text-underline-offset:3px; }
+    button,.button,select { font:inherit; font-size:13px; color:var(--ink); border:1px solid var(--line); border-radius:6px; background:transparent; padding:9px 13px; cursor:pointer; text-decoration:none; display:inline-block; }
+    button:hover,.button:hover { background:#eae7df; }
+    button:disabled,.button[aria-disabled="true"] { opacity:.45; cursor:default; }
+    :focus-visible { outline:2px solid var(--conceded); outline-offset:3px; }
+    .lead { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+    .lead:hover { background:#333; }
+    .wrap { max-width:1280px; margin:0 auto; padding:32px 44px 48px; }
+    .masthead { display:flex; gap:20px; justify-content:space-between; align-items:center; padding-bottom:28px; border-bottom:1px solid var(--line); }
+    .brand { font-size:19px; font-weight:750; letter-spacing:-.04em; }
+    .local { color:var(--muted); font:11px var(--mono); letter-spacing:.06em; margin-left:18px; }
+    .intro { padding:44px 0 30px; }
+    .eyebrow,.provider-name { font:11px var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.12em; }
+    h1 { max-width:850px; font-size:clamp(32px,4.6vw,54px); line-height:1.08; letter-spacing:-.045em; margin:16px 0; font-weight:650; text-wrap:balance; }
+    .lede { color:#4a4a4a; margin:0 0 24px; font-size:16px; }
+    .stats { display:flex; flex-wrap:wrap; gap:10px 30px; color:var(--muted); font-size:13px; }
+    .stats strong { color:var(--ink); font-weight:650; }
+    .workspace { display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:40px; padding-top:30px; border-top:1px solid var(--ink); }
+    .chart-header { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    h2 { font-size:19px; letter-spacing:-.025em; margin:0; font-weight:650; }
+    .chart-header select { margin-left:auto; max-width:160px; }
+    .filters { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:16px; }
+    .filters select { max-width:180px; }
+    .older { display:flex; gap:7px; align-items:center; color:var(--muted); font-size:12px; }
+    .model-picker { padding:0; margin:0; border:0; position:relative; }
+    .model-picker summary { font-size:13px; border:1px solid var(--line); border-radius:6px; padding:9px 13px; }
+    .model-menu { position:absolute; z-index:2; left:0; top:45px; width:min(380px,80vw); max-height:380px; overflow:auto; padding:16px; border:1px solid var(--line); border-radius:6px; background:var(--paper); box-shadow:0 6px 20px #1111; }
+    .model-option { display:flex; gap:8px; align-items:center; padding:7px 0; font-size:13px; }
+    .model-option input { accent-color:var(--ink); flex:none; }
+    .model-option .hint { margin-left:auto; white-space:nowrap; }
+    .model-menu button { padding:5px 8px; font-size:12px; margin:0 6px 10px 0; }
+    .downloads { display:flex; gap:8px; flex-wrap:wrap; }
+    .selection { color:var(--muted); font-size:12px; margin:12px 0 18px; }
+    .legend { display:flex; flex-wrap:wrap; gap:10px 24px; font-size:12px; color:#444; padding:14px 0; border-block:1px solid var(--line); }
+    .legend-item { display:flex; gap:8px; align-items:center; }
+    .swatch { width:20px; height:8px; display:inline-block; }
+    .swatch-owned { background:var(--owned); } .swatch-conceded { background:var(--conceded); }
+    .provider { margin-top:26px; }
+    .provider-name { margin-bottom:4px; }
+    .model { display:grid; grid-template-columns:minmax(0,1fr) 90px; gap:18px; padding:18px 0; border-bottom:1px solid var(--line); }
+    .model-name { font-size:18px; font-weight:650; letter-spacing:-.02em; overflow-wrap:anywhere; }
+    .model-usage { margin-top:5px; font-size:12px; color:var(--ink); }
+    .meta { margin-top:6px; color:var(--muted); font:11px/1.65 var(--mono); }
+    .owned-text { color:var(--ink); } .conceded-text { color:#a63e20; }
+    .low-sample { color:#a63e20; font-weight:500; }
+    .bar { display:flex; height:8px; width:100%; margin-top:12px; background:#e5e2db; }
+    .bar-owned { background:var(--owned); } .bar-conceded { background:var(--conceded); }
+    .rate { text-align:right; font-size:28px; line-height:1.1; font-weight:700; letter-spacing:-.04em; }
+    .rate-label { text-align:right; margin-top:5px; font:10px var(--mono); color:var(--muted); }
+    .chart-footer { display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px; align-items:center; margin-top:22px; }
+    .chart-footer p { margin:0; color:var(--muted); font-size:12px; }
+    .chart-footer strong { color:var(--ink); }
+    aside { border-left:1px solid var(--line); padding-left:30px; min-width:0; }
+    .draft-panel { position:sticky; top:24px; }
+    .draft-panel>p { color:var(--muted); font-size:13px; margin:10px 0 16px; }
+    textarea { display:block; width:100%; resize:vertical; padding:15px; background:#fffdf8; border:1px solid var(--line); border-radius:6px; color:var(--ink); font:14px/1.6 var(--font); }
+    #draft { min-height:290px; }
+    .draft-actions { display:flex; gap:10px; margin-top:12px; align-items:center; flex-wrap:wrap; }
+    .hint { font-size:11px; color:var(--muted); }
+    details { border-top:1px solid var(--line); padding-top:16px; margin-top:22px; font-size:13px; }
+    summary { font-weight:550; cursor:pointer; }
+    details p,details li { color:#4a4a4a; }
+    details ul { padding-left:18px; }
+    #description { margin-top:14px; min-height:170px; font-size:12px; }
+    .small { font-size:12px; padding:7px 11px; margin-top:10px; }
+    .status { min-height:1.5em; font-size:12px; color:#4a4a4a; margin:12px 0; }
+    footer { display:flex; flex-wrap:wrap; justify-content:space-between; gap:16px; margin-top:42px; border-top:1px solid var(--line); padding-top:20px; color:var(--muted); font-size:12px; }
+    footer code { color:var(--ink); font:12px var(--mono); }
+    @media(max-width:950px) { .wrap { padding:24px; } .workspace { gap:26px; grid-template-columns:minmax(0,1fr) 280px; } aside { padding-left:22px; } }
+    @media(max-width:740px) { .workspace { grid-template-columns:1fr; } aside { border-left:0; padding:28px 0 0; border-top:1px solid var(--line); } .draft-panel { position:static; } .local { display:block; margin:5px 0 0; } .intro { padding-top:30px; } .wrap { padding:20px; } .model { grid-template-columns:minmax(0,1fr) 75px; gap:12px; } .chart-header select { max-width:125px; } }
+    @media print { .wrap { padding:0; } .workspace { grid-template-columns:1fr; } aside,button,.button,select,.local { display:none; } .model { break-inside:avoid; } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div><span class="brand">dumb n honest</span><span class="local">LOCAL · OFFLINE</span></div>
+    <button id="save-page" type="button">Save page</button>
+  </header>
+  <section class="intro">
+    <div class="eyebrow">Your local coding-agent audit</div>
+    <h1>How often does your agent acknowledge a correction?</h1>
+    <p class="lede">Correction acknowledgments / 100 answered turns. Your own history, in one place.</p>
+    <div class="stats"><span><strong>@@TURN_COUNT@@</strong> answered turns audited</span><span><strong id="visible-count">@@MODEL_COUNT@@</strong> versions shown</span><span><strong>@@PROVIDER_COUNT@@</strong> providers</span></div>
+  </section>
+  <main class="workspace">
+    <section aria-labelledby="chart-title">
+      <div class="chart-header"><h2 id="chart-title">Model comparison</h2><select id="provider-filter" aria-label="Show provider"><option value="all">All providers</option><option value="claude">Claude</option><option value="codex">Codex</option></select></div>
+      <div class="filters"><select id="family-filter" aria-label="Show model family"><option value="all">All model families</option>@@FAMILY_OPTIONS@@</select><details class="model-picker"><summary>Choose models</summary><div class="model-menu"><button id="select-models" type="button">Select all</button><button id="clear-models" type="button">Clear</button>@@MODEL_OPTIONS@@</div></details><label class="older"><input id="older-models" type="checkbox">Include older generations</label></div>
+      <p class="selection">Latest 3 version numbers observed per provider; up to 3 versions per family. Sorted by acknowledgment rate. @@SELECTION_NOTE@@</p>
+      <div class="legend" aria-label="Bar colors"><span class="legend-item"><i class="swatch swatch-owned"></i>“I was wrong” · owned error</span><span class="legend-item"><i class="swatch swatch-conceded"></i>“You’re right” · conceded</span></div>
+      <div id="models">@@ROWS@@</div>
+      <p id="empty-models" class="selection" hidden>No models match these filters. Select a model or reset the filters.</p>
+      <div class="chart-footer"><p><strong>Higher ≠ worse.</strong><br>Acknowledgment rate, not model error rate.</p><div class="downloads">@@PNG_DOWNLOAD@@<a class="button" id="download-svg" href="data:image/svg+xml;base64,@@CHART_DATA@@" data-full-chart="@@FULL_CHART_DATA@@" download="dumb-n-honest-chart.svg">Download chart · SVG</a></div></div>
+      <p class="hint">Downloads use the models currently shown.</p>
+    </section>
+    <aside aria-labelledby="draft-title"><div class="draft-panel">
+      <h2 id="draft-title">Share draft</h2>
+      <p>Edit the text, review the chart, then copy what you need.</p>
+      <label class="hint" for="draft">Editable draft</label>
+      <textarea id="draft" spellcheck="true">@@DRAFT@@</textarea>
+      <div class="draft-actions"><button class="lead" id="copy-draft" type="button">Copy draft</button><span class="hint">Save page to keep edits.</span></div>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <details><summary>How to read this</summary><p><strong>Usage</strong> is the number of answered human turns. The large number is correction acknowledgments per 100 turns; zero acknowledgments can coexist with nonzero usage.</p><p>Black marks explicit ownership of an error. Orange marks explicit acceptance of a correction. Each answered human turn counts once; the total combines both.</p><p>All visible bars use the same scale. The default shows the latest three numeric version numbers observed per provider, with at most three versions per family. Include older generations to reveal earlier models. Version numbers are not release dates.</p><p><strong>Low sample</strong> means fewer than 100 answered turns. The sampling labels use the audit’s event and turn counts: exploratory below 500 turns or 10 events; sample-limited at 10–19 events; sample-sufficient at 20 or more.</p><p>95% confidence intervals describe turn-level uncertainty. Tasks, dates, effort and user behavior can differ, and turns may be clustered. A higher rate does not prove a model makes more mistakes.</p></details>
+      <details><summary>Chart description</summary><textarea id="description" readonly aria-label="Full chart description">@@DESCRIPTION@@</textarea><button class="small" id="copy-description" type="button">Copy description</button></details>
+      <details><summary>Data quality</summary><ul>@@QUALITY@@</ul><p>Raw conversation text is absent from this page. Keep the full aggregate results.json private.</p></details>
+    </div></aside>
+  </main>
+  <footer><span>Run your own audit: <code>npx dumb-n-honest</code></span><a href="@@BENCHMARK_URL@@" target="_blank" rel="noopener noreferrer">View benchmark source ↗</a></footer>
+  <noscript><p>The chart and draft are readable without JavaScript. Enable it for copy, filters and saving edits.</p></noscript>
+</div>
+<script>@@SCRIPT@@</script>
+</body>
+</html>

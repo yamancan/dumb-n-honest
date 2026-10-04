@@ -91,7 +91,7 @@ class PackageCliTests(unittest.TestCase):
             )
             self.assertEqual(completed.returncode, 0, completed.stderr)
             self.assertTrue((output / "results.json").is_file())
-            self.assertTrue((output / "tweet.txt").is_file())
+            self.assertTrue((output / "report.html").is_file())
 
     def test_package_rejects_symlinked_sources(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

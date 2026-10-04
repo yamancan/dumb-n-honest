@@ -114,7 +114,7 @@ emitted: its affected top-level turn is quarantined from the exact-model denomin
 of observed top-level human turns may be quarantined under `OK_WITH_WARNINGS`; every share artifact
 discloses the omitted count. More than 1%, unsupported schema, malformed input, file errors, invalid
 effort metadata, or failed reconciliation make the aggregate unshareable. Preserve private
-`results.json`; refuse poster/post generation.
+`results.json`; refuse report and share-export generation.
 
 ## Output boundary
 
@@ -129,6 +129,16 @@ request IDs, usernames, emails, handles, or hashes.
 draft, and alt text. The poster and post split the deduplicated headline total into `OWNED_ERROR`
 and `CONCEDED` so agreement is not presented as error ownership. Each share artifact names the
 benchmark repository; `--github-url` may override the canonical link. Nothing posts automatically.
+
+The default review surface is one offline `report.html` with the chart, editable draft, full
+description, model filters and PNG/SVG downloads. A best-effort `chart.png` is generated directly from
+the SVG with `rsvg-convert`; filtered browser downloads use only the visible models.
+Presentation offers at most three latest numeric versions per model family and defaults to the
+three newest distinct observed version numbers per provider. Older generations remain available
+through a filter. Rows sort by observed rate within each provider; this does not alter the scanner's full
+exact-model aggregates. Version numbers are not release dates. Models with fewer than 100 turns
+remain visible with a Low sample label, alongside the sampling status above. Separate share files
+are optional with `--export-share-pack`.
 
 ## Controlled challenge benchmark
 

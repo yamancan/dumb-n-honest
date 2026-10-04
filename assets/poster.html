@@ -24,7 +24,9 @@
     .provider-name { margin-bottom:2px; color:var(--muted); font-size:15px; letter-spacing:.12em; text-transform:uppercase; }
     .model { display:grid; grid-template-columns:1fr 150px; gap:18px; padding:17px 0 15px; border-bottom:1px solid var(--line); }
     .model-name { overflow:hidden; font:700 23px/1.1 ui-sans-serif, system-ui, sans-serif; text-overflow:ellipsis; white-space:nowrap; }
-    .meta { overflow:hidden; margin-top:8px; color:var(--muted); font-size:14px; text-overflow:ellipsis; white-space:nowrap; }
+    .model-usage { margin-top:7px; font-size:15px; color:var(--ink); }
+    .meta { margin-top:8px; color:var(--muted); font-size:14px; line-height:1.5; }
+    .low-sample { color:#a63e20; font-weight:500; }
     .bar { display:flex; width:100%; height:11px; margin-top:12px; background:#e5e2db; }
     .bar-owned { background:var(--owned); }
     .bar-conceded { background:var(--conceded); }
@@ -46,6 +48,7 @@
     <div class="eyebrow">Local coding-agent benchmark</div>
     <h1>Dumb n Honest</h1>
     <p class="dek">Correction acknowledgments / 100 answered turns.</p>
+    <p class="omitted">Up to 3 latest versions per family · Sorted by acknowledgment rate within each provider.</p>
     <div class="legend" aria-label="Bar colors"><span class="legend-item"><span class="swatch swatch-owned"></span><span>“I was wrong” · owned error</span></span><span class="legend-item"><span class="swatch swatch-conceded"></span><span>“You’re right” · conceded</span></span></div>
     <section class="models">@@ROWS@@@@OMITTED@@</section>
     <footer><div><strong>Higher ≠ worse.</strong> Acknowledgment rate, not model error rate.<div class="benchmark">@@BENCHMARK_URL@@</div></div><div class="cta"><div class="cta-label">▶ Run yours locally</div><div class="cta-command">npx dumb-n-honest</div></div></footer>

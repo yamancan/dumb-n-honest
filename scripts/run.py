@@ -28,35 +28,28 @@ force_utf8_output()
 
 def friendly_summary(results_path: Path, output_dir: Path) -> str | None:
     result = json.loads(results_path.read_text(encoding="utf-8"))
-    headline = []
+    providers = []
     total_turns = 0
     for provider in ("claude", "codex"):
         provider_result = result.get("providers", {}).get(provider, {})
-        best = None
+        turns = 0
         for model in provider_result.get("models", []):
-            total_turns += int(model.get("answered_human_turns") or 0)
-            ack = model.get("acknowledged_correction") or {}
-            rate = float(ack.get("per_100_turns") or 0)
-            if best is None or rate > best[1]:
-                best = (model.get("model_id", ""), rate, ack.get("sample_status", ""))
-        if best:
-            display = str(best[0])
-            if provider == "claude" and display.startswith("claude-"):
-                display = display.removeprefix("claude-").replace("-", " ").title()
-            elif provider == "codex" and display.startswith("gpt-"):
-                display = "GPT-" + display[4:].replace("-", " ").title()
-            headline.append(f"{PROVIDER_BADGE[provider]} {display}: {best[1]:.2f}/100 {best[2]}")
-    if not headline:
+            turns += int(model.get("answered_human_turns") or 0)
+        total_turns += turns
+        if turns:
+            providers.append(f"{PROVIDER_LABEL[provider]}: {turns:,} answered turns")
+    if not providers:
         return None
     lines = [
-        "✅ Audit complete — here's your summary!",
-        "Correction acknowledgments per 100 turns:",
-        *headline,
+        f"Audit complete: {total_turns:,} answered turns.",
+        *providers,
         "",
         "🖤 “I was wrong” (owned) + 🟠 “You're right” (conceded).",
         "⚠️ Your personal workload, not a model error rate.",
     ]
     for label, filename in (
+        ("Open your audit workspace", "report.html"),
+        ("Ready-to-share chart", "chart.png"),
         ("Post for Twitter/X", "tweet.txt"),
         ("Image with the chart", "poster.png"),
         ("Chart description (alt text)", "alt-text.txt"),
@@ -65,7 +58,7 @@ def friendly_summary(results_path: Path, output_dir: Path) -> str | None:
         path = output_dir / filename
         if path.is_file():
             lines.append(f"📄 {label}: {path}")
-    lines.append("▶ Share these from the folder above, or run it on your own machine with: npx dumb-n-honest")
+    lines.append("The workspace contains the chart, editable draft, description and downloads.")
     return "\n".join(lines)
 
 
@@ -82,7 +75,7 @@ def prepare_output_directory(path: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Run the private local audit and build its share pack."
+        description="Run the private local audit and build one offline report workspace."
     )
     parser.add_argument("--provider", choices=("all", "claude", "codex"), default="all")
     parser.add_argument("--claude-root", type=Path, default=Path.home() / ".claude")
@@ -92,6 +85,7 @@ def main() -> None:
     parser.add_argument("--github-url")
     parser.add_argument("--no-png", action="store_true")
     parser.add_argument("--require-png", action="store_true")
+    parser.add_argument("--export-share-pack", action="store_true", help="Also export separate poster, draft and alt-text files.")
     args = parser.parse_args()
 
     if args.no_png and args.require_png:
@@ -128,7 +122,7 @@ def main() -> None:
     )
     if scan.returncode != 0:
         raise SystemExit("The local transcript scan failed; no raw transcript content was emitted.")
-    print("Scan complete; building share pack.", file=sys.stderr, flush=True)
+    print("Scan complete; building report workspace.", file=sys.stderr, flush=True)
 
     report_command = [
         sys.executable,
@@ -144,6 +138,8 @@ def main() -> None:
         report_command.append("--no-png")
     if args.require_png:
         report_command.append("--require-png")
+    if args.export_share_pack:
+        report_command.append("--export-share-pack")
     report = subprocess.run(
         report_command,
         cwd=SKILL_ROOT,

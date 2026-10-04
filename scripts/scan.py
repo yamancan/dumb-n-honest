@@ -23,7 +23,7 @@ force_utf8_output()
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
-TOOL_VERSION = "0.2.10"
+TOOL_VERSION = "0.2.11"
 SCHEMA_VERSION = "2.0"
 ADAPTER_VERSIONS = {"claude": "3", "codex": "4"}
 MAX_QUARANTINED_MODEL_TURN_SHARE_PCT = 1.0

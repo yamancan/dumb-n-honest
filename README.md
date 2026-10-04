@@ -42,16 +42,21 @@ mistakes, more user corrections, more explicit ownership, or more willingness to
 - Nothing is posted automatically.
 
 The repository uses no runtime packages so the transcript-reading boundary can be audited directly.
-Keep `results.json` private. Preview `poster.png`, `tweet.txt`, and `alt-text.txt` before sharing.
+Keep `results.json` private. Open `report.html` to review the chart and draft before sharing.
 
 ## Requirements
 
 - Python 3.10 or newer; standard library only.
 - Local Claude Code and/or Codex transcript history.
-- Chrome, Chromium, Edge, or Brave for PNG export.
+- A browser to use the offline workspace and download a filtered PNG.
+- Optional `rsvg-convert` to write a ready-to-share PNG directly from the CLI. The legacy share-pack
+  exporter can also use Chrome, Chromium, Edge, or Brave when that renderer is absent.
 
-HTML, aggregate JSON, the English post draft, and alt text do not require a browser. PNG generation
-is best-effort by default; use `--require-png` only when PNG is mandatory.
+The default output is one offline `report.html` workspace plus private aggregate JSON and a
+best-effort `chart.png`. It embeds the chart, editable draft and description, and offers PNG and SVG
+downloads for the selected models. CLI PNG rendering uses the SVG directly without launching a
+browser when `rsvg-convert` is installed. Separate share files are optional with `--export-share-pack`.
+Use `--require-png` only when PNG is mandatory.
 
 Agent sandboxes may ask for permission to read `~/.claude` or `~/.codex`.
 
@@ -76,7 +81,7 @@ and nothing is published automatically. Users who prefer to inspect every file b
 use the tagged-release installation below.
 
 The repository includes `assets/social-preview.png` for link cards and announcements. Personal audit
-results remain local and are shared only when the user attaches the generated `poster.png`.
+results remain local. The report offers copy and download controls; nothing posts automatically.
 
 ## Agent smoke test from this repository
 
@@ -152,11 +157,12 @@ Defaults: both providers and both language packs (`en,tr`). Examples:
 python3 scripts/run.py --provider claude --languages en,tr --output-dir ./audit-claude
 python3 scripts/run.py --provider codex --languages tr --output-dir ./audit-codex
 python3 scripts/run.py --output-dir ./audit-html --no-png
+python3 scripts/run.py --output-dir ./audit-share --export-share-pack
 python3 scripts/run.py --output-dir ./audit-strict --require-png
 ```
 
 The output directory must be new or empty. Existing results are never overwritten. Optional GitHub
-URL override for the generated post and poster:
+URL override for the report and optional share exports:
 
 ```bash
 python3 scripts/run.py --output-dir ./audit-share \
@@ -169,20 +175,28 @@ Without an override, share artifacts link to
 ## Outputs
 
 - `results.json`: private aggregate results, versions, quality status, and diagnostics.
-- `poster.html`: self-contained, network-free poster source, 1080 pixels wide and at least 1350 pixels tall.
-- `poster.png`: share image when a compatible browser can render it.
-- `tweet.txt`: English post draft of at most 280 characters.
-- `alt-text.txt`: objective chart description.
+- `report.html`: one self-contained, network-free workspace with the comparison chart, editable
+  draft, full chart description, provider/family/individual model filters, copy controls and PNG/SVG
+  downloads. **Save page** downloads a copy that preserves draft edits and filter selections.
+  No storage, server or external fonts are required.
+- `chart.png`: ready-to-share image of the default visible models when `rsvg-convert` is installed.
+  If CLI export is unavailable, use **Download PNG** in the report. Filtered downloads contain the
+  currently visible models and update the chart description to match.
 
-The poster shows every exact model with at least 100 answered turns, grouped by provider, and grows
-vertically to fit all rows. It includes a local `npx dumb-n-honest` call to action. Each stacked bar uses black for explicit
-ownership such as `I was wrong` and orange for explicit acceptance such as `You're right`; the
-number at right is their deduplicated total per 100 turns. The row also shows the subtype rates,
-denominator, total confidence interval, and sample status. The post pairs a short personal hook with
-the total observed workload and one readable result per provider without declaring the highest total
-a winner, adds an emoji legend (black heart for owned, orange circle for conceded) that matches the
-poster colors, and closes with a `npx dumb-n-honest` run-locally call to action. Both include the
-benchmark link. Nothing is published automatically.
+The chart offers at most three latest numeric versions per model family (Opus, Fable, Sol, etc.).
+The default selects the latest three distinct version numbers observed in each provider's history,
+then sorts them by acknowledgment rate, highest first, within each provider. **Include older
+generations** reveals earlier models; family and individual model filters refine the selection.
+Version numbers are not asserted to be release dates. Exact model IDs stay separate; full aggregates remain in
+`results.json`. Models below 100 answered turns remain visible with a **Low sample** label.
+Each stacked bar uses black for explicit ownership such as `I was wrong` and orange for explicit
+acceptance such as `You're right`; the number at right is their deduplicated total per 100 turns.
+Rows include subtype rates, event counts, denominators, total confidence intervals and sample status.
+
+Pass `--export-share-pack` for separate `poster.html`, best-effort `poster.png`, `tweet.txt` and
+`alt-text.txt`. `--no-png` skips PNG export; `--require-png` implies the separate exports and fails
+if rendering is blocked. The draft features one 100+ turn model per provider; chart descriptions
+include low-sample models. All outputs include the benchmark link. Nothing posts automatically.
 
 ## Measurement contract
 
@@ -223,10 +237,10 @@ See [`references/measurement.md`](references/measurement.md) for the full contra
 The scanner records adapter and pattern versions plus provider status. A missing optional provider
 is allowed when another provider is valid. Unknown model IDs are never emitted: affected turns are
 quarantined from exact-model denominators. Up to 1% of observed top-level human turns may be
-quarantined under `OK_WITH_WARNINGS`, with the omission disclosed in the poster, post, and alt text.
+quarantined under `OK_WITH_WARNINGS`, with the omission disclosed in the report and share exports.
 More than 1%, malformed data, unsupported/empty schema, unknown effort metadata, file errors, or
 failed turn reconciliation mark results unshareable; private `results.json` is preserved but the
-share pack is refused. Excluded subagent and duplicate-session files do not contribute metadata or
+report and share exports are refused. Excluded subagent and duplicate-session files do not contribute metadata or
 turns to quality gates. Claude subagent transcripts under `subagents/` are excluded by path; Claude
 meta/compaction records and their associated assistant output are excluded from turns. If a top-level transcript disappears while the
 scan runs (an active agent session), the result is `INCOMPLETE`; re-run when nothing is writing. The renderer requires schema 2.0 with an explicit passing quality status.

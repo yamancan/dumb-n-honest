@@ -13,6 +13,12 @@ With no arguments, the launcher runs the full audit with both providers and both
 writes to a new timestamped `dumb-n-honest-output-*` directory in the current working directory, so
 existing results are never overwritten.
 
+Open `report.html` for the chart, editable draft, provider/family/model filters and PNG/SVG downloads.
+Older generations are hidden by default. The large number is correction acknowledgments per 100
+answered turns; usage is labelled separately. A ready-to-share `chart.png` is exported when
+`rsvg-convert` is installed, or can be downloaded from the report in your browser. Pass
+`--export-share-pack` for separate poster, draft and alt-text files.
+
 This package is a thin launcher with no npm dependencies. It:
 
 1. finds a local Python 3.10+ interpreter,
