@@ -169,13 +169,13 @@ Without an override, share artifacts link to
 ## Outputs
 
 - `results.json`: private aggregate results, versions, quality status, and diagnostics.
-- `poster.html`: self-contained, network-free 1080×1350 poster source.
+- `poster.html`: self-contained, network-free poster source, 1080 pixels wide and at least 1350 pixels tall.
 - `poster.png`: share image when a compatible browser can render it.
 - `tweet.txt`: English post draft of at most 280 characters.
 - `alt-text.txt`: objective chart description.
 
-The lean poster reserves up to three rows per provider and includes a local `npx dumb-n-honest`
-call to action. Each stacked bar uses black for explicit
+The poster shows every exact model with at least 100 answered turns, grouped by provider, and grows
+vertically to fit all rows. It includes a local `npx dumb-n-honest` call to action. Each stacked bar uses black for explicit
 ownership such as `I was wrong` and orange for explicit acceptance such as `You're right`; the
 number at right is their deduplicated total per 100 turns. The row also shows the subtype rates,
 denominator, total confidence interval, and sample status. The post pairs a short personal hook with

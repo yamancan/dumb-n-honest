@@ -16,6 +16,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class PrivacyTests(unittest.TestCase):
+    def test_codex_astra_model_is_allowed_without_accepting_private_suffixes(self) -> None:
+        self.assertEqual(safe_model_id("codex", "gpt-6-astra", "redacted"), "gpt-6-astra")
+        self.assertEqual(
+            safe_model_id("codex", "gpt-6-astra-private-client", "redacted"),
+            "redacted",
+        )
+
     def test_model_and_effort_allowlists_are_provider_specific(self) -> None:
         self.assertEqual(
             safe_model_id("claude", "claude-fable-4-2-20260801", "redacted"),

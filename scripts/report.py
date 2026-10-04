@@ -5,6 +5,7 @@ import argparse
 import html
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -69,8 +70,7 @@ def selected_models(result: dict[str, Any]) -> tuple[list[tuple[str, dict[str, A
             else:
                 provider_models.append(model)
         provider_models.sort(key=lambda model: -int(model["answered_human_turns"]))
-        omitted += max(0, len(provider_models) - 3)
-        selected = provider_models[:3]
+        selected = provider_models
         if provider == "claude":
             selected.sort(
                 key=lambda model: (
@@ -306,7 +306,7 @@ def build_alt_text(
             f"total 95% CI {interval['low']:.2f} to {interval['high']:.2f})."
         )
     suffix = (
-        f" {omitted} low-sample or overflow "
+        f" {omitted} low-sample "
         f"{'model' if omitted == 1 else 'models'} omitted."
         if omitted
         else ""
@@ -410,14 +410,16 @@ def render_png(poster_html: Path, output: Path) -> None:
             measured_ok = "<html" in measured_stdout.casefold()
         if not measured_ok:
             raise RenderError("Local browser could not measure poster.html; the HTML was preserved.")
-        if 'data-overflow="true"' in measured_stdout:
-            raise RenderError("Poster content exceeds 1080x1350; the HTML was preserved without PNG.")
+        height_match = re.search(r'data-poster-height="(\d+)"', measured_stdout)
+        if height_match is None:
+            raise RenderError("Local browser could not measure poster height; the HTML was preserved.")
+        poster_height = max(1350, int(height_match.group(1)))
         try:
             rendered = subprocess.run(
                 [
                     *common,
                     "--run-all-compositor-stages-before-draw",
-                    "--window-size=1080,1350",
+                    f"--window-size=1080,{poster_height}",
                     f"--screenshot={output}",
                     uri,
                 ],

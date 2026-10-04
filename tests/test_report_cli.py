@@ -8,12 +8,14 @@ import unittest
 import shutil
 import struct
 from pathlib import Path
+from unittest.mock import patch
 
 from scripts.report import (
     DEFAULT_BENCHMARK_URL,
     build_alt_text,
     build_tweet,
     friendly_model,
+    render_png,
     selected_models,
 )
 
@@ -22,6 +24,25 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ReportCliTests(unittest.TestCase):
+    def test_png_viewport_matches_the_measured_poster_height(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            poster = root / "poster.html"
+            poster.write_text("synthetic poster", encoding="utf-8")
+            output = root / "poster.png"
+
+            def browser_run(args, **kwargs):
+                if "--dump-dom" in args:
+                    return subprocess.CompletedProcess(args, 0, '<html data-poster-height="1832"></html>')
+                if "--window-size=1080,1832" in args:
+                    output.write_bytes(b"synthetic screenshot")
+                    return subprocess.CompletedProcess(args, 0)
+                return subprocess.CompletedProcess(args, 1)
+
+            with patch("scripts.report.find_browser", return_value=Path("synthetic-browser")), patch("scripts.report.subprocess.run", side_effect=browser_run):
+                render_png(poster, output)
+            self.assertTrue(output.is_file())
+
     def test_social_preview_asset_is_self_contained_and_current(self) -> None:
         html = (ROOT / "assets" / "social-preview.html").read_text(encoding="utf-8")
         png = (ROOT / "assets" / "social-preview.png").read_bytes()
@@ -132,14 +153,41 @@ class ReportCliTests(unittest.TestCase):
         }
         models, omitted = selected_models(result)
 
-        self.assertEqual(sum(provider == "claude" for provider, _ in models), 3)
+        self.assertEqual(sum(provider == "claude" for provider, _ in models), 7)
         self.assertEqual(sum(provider == "codex" for provider, _ in models), 1)
         claude_ids = [model["model_id"] for provider, model in models if provider == "claude"]
         self.assertTrue(all(model_id.startswith("claude-opus-") for model_id in claude_ids[:2]))
-        self.assertEqual(omitted, 4)
+        self.assertEqual(omitted, 0)
         self.assertIn("Codex 5.6 Sol", build_tweet(models, None))
         self.assertIn(DEFAULT_BENCHMARK_URL, build_tweet(models, None))
-        self.assertIn("4 low-sample or overflow models omitted", build_alt_text(models, omitted))
+        self.assertNotIn("models omitted", build_alt_text(models, omitted))
+
+    def test_poster_includes_sol_6_1_beyond_the_first_three_codex_models(self) -> None:
+        result = json.loads((ROOT / "tests" / "fixtures" / "results" / "report.json").read_text(encoding="utf-8"))
+        template = result["providers"]["codex"]["models"][0]
+        result["providers"]["codex"]["models"] = [
+            {**template, "model_id": model_id, "answered_human_turns": turns}
+            for model_id, turns in (
+                ("gpt-5.6-sol", 3471),
+                ("gpt-6-sol", 926),
+                ("gpt-6-astra", 910),
+                ("gpt-6.1-sol", 507),
+                ("gpt-5.4-mini", 99),
+            )
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "result.json"
+            source.write_text(json.dumps(result), encoding="utf-8")
+            completed = subprocess.run(
+                [sys.executable, str(ROOT / "scripts" / "report.py"), "--input", str(source), "--output-dir", str(root / "share"), "--no-png"],
+                cwd=ROOT, capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            poster = (root / "share" / "poster.html").read_text(encoding="utf-8")
+        self.assertIn("Codex GPT-6.1 Sol", poster)
+        self.assertNotIn("Codex GPT-5.4 Mini", poster)
+        self.assertIn("2 additional low-sample models omitted", poster)
 
     def test_quarantined_turns_are_disclosed_in_every_share_artifact(self) -> None:
         source = ROOT / "tests" / "fixtures" / "results" / "report.json"

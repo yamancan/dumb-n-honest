@@ -171,6 +171,101 @@ class ClaudeLayoutTests(unittest.TestCase):
 
 
 class CodexLayoutTests(unittest.TestCase):
+    def test_response_item_messages_count_answered_turns_and_reasoning_deltas(self) -> None:
+        with tempfile.TemporaryDirectory() as fixture_dir:
+            root = Path(fixture_dir)
+            write_jsonl(
+                root / "sessions" / "2026" / "main.jsonl",
+                [
+                    {"type": "session_meta", "payload": {"source": "cli", "id": "synthetic-main"}},
+                    {"type": "event_msg", "timestamp": "2026-10-01T10:00:00Z", "payload": {"type": "task_started"}},
+                    {"type": "turn_context", "payload": {"model": "gpt-6.1-sol", "effort": "xhigh"}},
+                    {"type": "response_item", "payload": {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "Check the arithmetic."}, {"type": "input_image", "image_url": "synthetic-image"}]}},
+                    {"type": "event_msg", "payload": {"type": "item_completed", "item": {"type": "UserMessage", "id": "synthetic-user", "content": [{"type": "text", "text": "Check the arithmetic."}]}}},
+                    {"type": "event_msg", "payload": {"type": "item_completed", "item": {"type": "AgentMessage", "id": "synthetic-reply", "content": [{"type": "Text", "text": "I was wrong. The total is 42."}]}}},
+                    {"type": "response_item", "payload": {"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": "I was wrong."}, {"type": "output_text", "text": "The total is 42."}]}},
+                    {"type": "event_msg", "payload": {"type": "token_count", "info": {"total_token_usage": {"reasoning_output_tokens": 100}}}},
+                    {"type": "event_msg", "payload": {"type": "task_complete"}},
+                    {"type": "event_msg", "timestamp": "2026-10-02T10:00:00Z", "payload": {"type": "task_started"}},
+                    {"type": "turn_context", "payload": {"model": "gpt-6.1-sol", "effort": "xhigh"}},
+                    {"type": "response_item", "payload": {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "Sonucu kontrol et."}]}},
+                    {"type": "response_item", "payload": {"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": "Haklısın; sonuç 42."}]}},
+                    {"type": "event_msg", "payload": {"type": "token_count", "info": {"total_token_usage": {"reasoning_output_tokens": 140}}}},
+                    {"type": "event_msg", "payload": {"type": "task_complete"}},
+                ],
+            )
+            provider = run_scan("codex", root)
+
+        diagnostics = provider["diagnostics"]
+        self.assertEqual(diagnostics["human_turns_seen"], 2)
+        self.assertEqual(diagnostics["answered_turns_included"], 2)
+        self.assertEqual(diagnostics["status"], "OK")
+        self.assertTrue(diagnostics["turn_reconciliation_ok"])
+        model = provider["models"][0]
+        self.assertEqual(model["model_id"], "gpt-6.1-sol")
+        self.assertEqual(model["answered_human_turns"], 2)
+        self.assertEqual(model["owned_error"]["count"], 1)
+        self.assertEqual(model["conceded"]["count"], 1)
+        self.assertEqual(model["acknowledged_correction"]["count"], 2)
+        self.assertEqual(model["effort"], {"xhigh": 2})
+        self.assertEqual(model["date_range"], {"first": "2026-10-01", "last": "2026-10-02"})
+        self.assertEqual(model["reasoning"]["observed_tokens"], 140)
+        self.assertEqual(model["reasoning"]["covered_answered_turns"], 2)
+        self.assertEqual(model["reasoning"]["tokens_per_covered_answered_turn"], 70.0)
+
+    def test_legacy_and_response_item_messages_do_not_duplicate_a_turn(self) -> None:
+        with tempfile.TemporaryDirectory() as fixture_dir:
+            root = Path(fixture_dir)
+            write_jsonl(
+                root / "sessions" / "main.jsonl",
+                [
+                    {"type": "event_msg", "payload": {"type": "task_started"}},
+                    {"type": "turn_context", "payload": {"model": "gpt-6-sol", "effort": "high"}},
+                    {"type": "event_msg", "payload": {"type": "user_message", "message": "Check."}},
+                    {"type": "response_item", "payload": {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "Check."}]}},
+                    {"type": "event_msg", "payload": {"type": "agent_message", "message": "You're right."}},
+                    {"type": "response_item", "payload": {"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": "You're right."}]}},
+                    {"type": "event_msg", "payload": {"type": "task_complete"}},
+                ],
+            )
+            provider = run_scan("codex", root)
+
+        self.assertEqual(provider["diagnostics"]["human_turns_seen"], 1)
+        self.assertEqual(provider["models"][0]["answered_human_turns"], 1)
+        self.assertEqual(provider["models"][0]["acknowledged_correction"]["count"], 1)
+
+    def test_response_items_exclude_injected_messages_and_hidden_text(self) -> None:
+        cases = [
+            ("environment", "user", "<environment_context>synthetic context</environment_context>", "final", "I was wrong.", 0, 0),
+            ("instructions", "user", "# AGENTS.md instructions for synthetic project", "final", "I was wrong.", 0, 0),
+            ("developer", "developer", "Synthetic instruction.", "final", "I was wrong.", 0, 0),
+            ("system", "system", "Synthetic instruction.", "final", "I was wrong.", 0, 0),
+            ("analysis", "user", "Check.", "analysis", "I was wrong.", 1, 0),
+            ("visible", "user", "Check.", "commentary", "The total is 42.", 1, 1),
+            ("empty", "user", "Check.", "final", "", 1, 0),
+        ]
+        for name, role, prompt, channel, text, human_turns, answered_turns in cases:
+            with self.subTest(case=name), tempfile.TemporaryDirectory() as fixture_dir:
+                root = Path(fixture_dir)
+                write_jsonl(
+                    root / "sessions" / "main.jsonl",
+                    [
+                        {"type": "event_msg", "payload": {"type": "task_started"}},
+                        {"type": "turn_context", "payload": {"model": "gpt-6-luna", "effort": "high"}},
+                        {"type": "response_item", "payload": {"type": "message", "role": role, "content": [{"type": "input_text", "text": prompt}]}},
+                        {"type": "response_item", "payload": {"type": "agent_message", "content": [{"type": "input_text", "text": "I was wrong. Synthetic subagent message."}]}},
+                        {"type": "response_item", "payload": {"type": "function_call_output", "output": "I was wrong. Synthetic tool output."}},
+                        {"type": "event_msg", "payload": {"type": "item_completed", "item": {"type": "AgentMessage", "content": [{"type": "Text", "text": "I was wrong. Synthetic duplicated item."}]}}},
+                        {"type": "response_item", "payload": {"type": "message", "role": "assistant", "channel": channel, "content": [{"type": "output_text", "text": text}]}},
+                        {"type": "event_msg", "payload": {"type": "task_complete"}},
+                    ],
+                )
+                provider = run_scan("codex", root)
+                self.assertEqual(provider["diagnostics"]["human_turns_seen"], human_turns)
+                self.assertEqual(provider["diagnostics"]["answered_turns_included"], answered_turns)
+                if answered_turns:
+                    self.assertEqual(provider["models"][0]["acknowledged_correction"]["count"], 0)
+
     def test_excluded_session_stops_parsing_before_malformed_lines(self) -> None:
         with tempfile.TemporaryDirectory() as fixture_dir:
             root = Path(fixture_dir)

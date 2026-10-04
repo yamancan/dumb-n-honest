@@ -23,9 +23,9 @@ force_utf8_output()
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
-TOOL_VERSION = "0.2.9"
+TOOL_VERSION = "0.2.10"
 SCHEMA_VERSION = "2.0"
-ADAPTER_VERSIONS = {"claude": "3", "codex": "3"}
+ADAPTER_VERSIONS = {"claude": "3", "codex": "4"}
 MAX_QUARANTINED_MODEL_TURN_SHARE_PCT = 1.0
 REDACTED_MODEL_ID = "redacted-invalid-model-id"
 MODEL_ID_PATTERNS = {
@@ -35,7 +35,7 @@ MODEL_ID_PATTERNS = {
     ),
     "codex": re.compile(
         r"(?:gpt-\d{1,2}(?:\.\d{1,2})*"
-        r"(?:-(?:codex|mini|max|pro|sol|terra|luna|latest|spark)){0,4}"
+        r"(?:-(?:codex|mini|max|pro|sol|terra|luna|astra|latest|spark)){0,4}"
         r"|o\d{1,2}(?:-(?:mini|pro|latest))?|codex-mini-latest|codex-auto-review)"
     ),
 }
@@ -210,7 +210,7 @@ def finish_provider_diagnostics(diagnostics: dict[str, Any]) -> None:
         diagnostics["status"] = "OK"
 
 
-def visible_text(content: object) -> str:
+def visible_text(content: object, *, text_types: tuple[str, ...] = ("text",)) -> str:
     if isinstance(content, str):
         return content
     if not isinstance(content, list):
@@ -219,7 +219,7 @@ def visible_text(content: object) -> str:
         block["text"]
         for block in content
         if isinstance(block, dict)
-        and block.get("type") == "text"
+        and block.get("type") in text_types
         and isinstance(block.get("text"), str)
     )
 
@@ -768,6 +768,23 @@ def scan_codex(root: Path, patterns: dict[str, list[tuple[str, re.Pattern[str]]]
                     ):
                         diagnostics["recognized_records"] += 1
                         current["texts"].append(payload["message"])
+                    elif (
+                        kind == "response_item"
+                        and payload_type == "message"
+                        and current is not None
+                        and payload.get("role") in ("user", "assistant")
+                    ):
+                        diagnostics["recognized_records"] += 1
+                        if payload["role"] == "user":
+                            text = visible_text(payload.get("content"), text_types=("input_text",))
+                            if not text.lstrip().startswith(
+                                ("<environment_context>", "# AGENTS.md instructions")
+                            ):
+                                current["human"] = True
+                        elif payload.get("channel") in (None, "commentary", "final"):
+                            text = visible_text(payload.get("content"), text_types=("output_text",))
+                            if text:
+                                current["texts"].append(text)
                     elif kind == "event_msg" and payload_type == "token_count":
                         diagnostics["recognized_records"] += 1
                         total = (
